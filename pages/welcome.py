@@ -48,10 +48,6 @@ class WelcomePage(ctk.CTkFrame):
         )
         subtitle.grid(row=2, column=0, sticky="n")
 
-        # --- Spacer for balance ---
-        # spacer = ctk.CTkFrame(self, fg_color="#D4E3FF")
-        # spacer.grid(row=0, column=0, sticky="we", pady=(10, 5))
-
         # --- Get Started Button (bottom aligned) ---
         get_started_btn = ctk.CTkButton(
             self,
