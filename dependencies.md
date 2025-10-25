@@ -1,0 +1,4 @@
+VEVN:
+    customeTkiner
+    pillow
+    watchdog

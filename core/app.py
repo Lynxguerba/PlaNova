@@ -1,6 +1,7 @@
 import customtkinter as ctk # type: ignore
 from pages.welcome import WelcomePage
 from pages.login import LoginPage
+from pages.register import RegisterPage
 
 class App(ctk.CTk):
     def __init__(self):
@@ -36,7 +37,7 @@ class App(ctk.CTk):
 
         # --- Store and initialize all pages ---
         self.frames = {}
-        for Page in (WelcomePage, LoginPage):
+        for Page in (WelcomePage, LoginPage, RegisterPage):
             page_name = Page.__name__
             frame = Page(parent=container, controller=self)
             self.frames[page_name] = frame

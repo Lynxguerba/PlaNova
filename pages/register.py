@@ -1,7 +1,7 @@
 import customtkinter as ctk  # type: ignore
 # from components.button import CustomButton
 
-class LoginPage(ctk.CTkFrame):
+class RegisterPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#D4E3FF")
         self.controller = controller
@@ -13,7 +13,7 @@ class LoginPage(ctk.CTkFrame):
         # --- Title ---
         title = ctk.CTkLabel(
             self,
-            text="Welcome!",
+            text="Sign Up!",
             font=ctk.CTkFont(family="Poppins", size=36, weight="bold"),
             text_color="#1E3A8A"
         )
@@ -34,6 +34,27 @@ class LoginPage(ctk.CTkFrame):
         entry_width = 400
         entry_height = 55
 
+        # Email
+        email_label = ctk.CTkLabel(
+            form_frame,
+            text="Email",
+            font=ctk.CTkFont(family="Poppins", size=14),
+            text_color="#1E3A8A"
+        )
+        email_label.pack(anchor="w", padx=40, pady=(5, 3))
+
+        self.email_entry = ctk.CTkEntry(
+            form_frame,
+            placeholder_text="Enter your email",
+            width=entry_width,
+            height=entry_height,
+            corner_radius=12,
+            border_width=0,
+            font=ctk.CTkFont(family="Poppins", size=14),
+            # fg_color="#E6E6E6"
+        )
+        self.email_entry.pack(padx=40, pady=(0, 12))
+        
         # Username
         username_label = ctk.CTkLabel(
             form_frame,
@@ -52,7 +73,7 @@ class LoginPage(ctk.CTkFrame):
             border_width=0,
             font=ctk.CTkFont(family="Poppins", size=14),
             # fg_color="#E6E6E6"
-        )
+        ) 
         self.username_entry.pack(padx=40, pady=(0, 12))
 
         # Password
@@ -80,7 +101,7 @@ class LoginPage(ctk.CTkFrame):
         # --- Login Button ---
         login_btn = ctk.CTkButton(
             self,
-            text="Login",
+            text="Create",
             fg_color="#2563EB",
             hover_color="#1D4ED8",
             text_color="white",
@@ -95,15 +116,15 @@ class LoginPage(ctk.CTkFrame):
         # --- "Create an account" Text ---
         create_account_label = ctk.CTkLabel(
             self,
-            text="Create an account",
+            text="Sign In Account",
             text_color="#1E3A8A",
             font=ctk.CTkFont(family="Poppins", size=18, underline=True)
         )
         create_account_label.grid(row=5, column=0, sticky="n")
         
         def open_register(event):
-            self.controller.show_frame("RegisterPage")
-            print("Redirecting to registration page...")
+            self.controller.show_frame("LoginPage")
+            print("Redirecting to login page...")
 
         create_account_label.bind("<Button-1>", open_register)
         create_account_label.bind("<Enter>", lambda e: create_account_label.configure(text_color="#3B82F6"))
@@ -112,9 +133,10 @@ class LoginPage(ctk.CTkFrame):
 
 
     def handle_login(self):
+        email = self.email_entry.get()
         username = self.username_entry.get()
         password = self.password_entry.get()
-        print(f"Username: {username}, Password: {password}")
+        print(f"Email: {email}, Username: {username}, Password: {password}")
         
         
 

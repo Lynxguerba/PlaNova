@@ -7,6 +7,7 @@ class WelcomePage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#D4E3FF")  # background color
         self.controller = controller
+        
 
         # --- Load image ---
         image_path = os.path.join("assets", "images", "logo.png")
