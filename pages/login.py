@@ -1,7 +1,7 @@
 import customtkinter as ctk # type: ignore # tpye: ignore
 from components.button import CustomButton 
 
-
+# New
 class LoginPage(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#F3F4F6")
