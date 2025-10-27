@@ -21,7 +21,7 @@ class RegisterPage(ctk.CTkFrame):
 
         subtitle = ctk.CTkLabel(
             self,
-            text="Sign in to your account",
+            text="Create your Account!",
             font=ctk.CTkFont(family="Poppins", size=18),
             text_color="#4B5563"
         )
@@ -129,8 +129,6 @@ class RegisterPage(ctk.CTkFrame):
         create_account_label.bind("<Button-1>", open_register)
         create_account_label.bind("<Enter>", lambda e: create_account_label.configure(text_color="#3B82F6"))
         create_account_label.bind("<Leave>", lambda e: create_account_label.configure(text_color="#1E3A8A"))
-
-
 
     def handle_login(self):
         email = self.email_entry.get()

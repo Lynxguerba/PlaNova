@@ -28,7 +28,7 @@ class WelcomePage(ctk.CTkFrame):
         # --- Top Image ---
         image_label = ctk.CTkLabel(self, text="", image=self.top_image)
         image_label.grid(row=0, column=0, pady=(180, 80))
-
+  
         # --- Title ---
         title = ctk.CTkLabel(
             self,

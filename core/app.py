@@ -2,6 +2,12 @@ import customtkinter as ctk # type: ignore
 from pages.welcome import WelcomePage
 from pages.login import LoginPage
 from pages.register import RegisterPage
+from pages.dashboard import DashboardPage
+from pages.settings import SettingsPage
+from pages.tasks import TasksPage
+from pages.upcoming import UpcomingPage
+from pages.completed import CompletedPage
+from pages.bin import BinPage 
 
 class App(ctk.CTk):
     def __init__(self):
@@ -26,7 +32,7 @@ class App(ctk.CTk):
         # --- Fixed portrait-style window ---
         self.resizable(False, False)
         self.configure(fg_color="#84CAFF")
-        
+
         # --- Container for all pages ---
         container = ctk.CTkFrame(self, fg_color="#BBE1FF")
         container.pack(fill="both", expand=True)
@@ -37,16 +43,16 @@ class App(ctk.CTk):
 
         # --- Store and initialize all pages ---
         self.frames = {}
-        for Page in (WelcomePage, LoginPage, RegisterPage):
+        for Page in (WelcomePage, LoginPage, RegisterPage, DashboardPage, SettingsPage, TasksPage, UpcomingPage, CompletedPage, BinPage):
             page_name = Page.__name__
             frame = Page(parent=container, controller=self)
             self.frames[page_name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
         # --- Show the first page---
-        self.show_frame("WelcomePage")
+        self.show_frame("DashboardPage")
 
     def show_frame(self, page_name):
-        """Raise the specified page to the front."""
+        #  Raise the specified page to the front.
         frame = self.frames[page_name]
         frame.tkraise()

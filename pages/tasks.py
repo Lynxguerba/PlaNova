@@ -1,7 +1,7 @@
 import customtkinter as ctk  # type: ignore
 # from components.button import CustomButton
 
-class LoginPage(ctk.CTkFrame):
+class TasksPage(ctk.CTkFrame):
     
     # UI
     def __init__(self, parent, controller):
