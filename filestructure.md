@@ -1,4 +1,4 @@
-productivity_app/
+PlaNova/
 │
 ├── main.py                        # Entry point for the app
 │

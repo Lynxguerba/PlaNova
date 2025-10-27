@@ -13,9 +13,9 @@ class DashboardPage(ctk.CTkFrame):
         # --- App Bar (top section) ---
         self.appbar = AppBar(
             self,
-            controller = self.controller,
-            profile_letter="D",
-            username="Dinno Guerba",
+            controller=self.controller,
+            profile_letter="U",  # Default, will be updated when user logs in
+            username="User",     # Default, will be updated when user logs in
             settings_icon_path="assets/images/setting.png"
         )
         self.appbar.pack(fill="x", pady=(10, 0))
@@ -59,7 +59,7 @@ class DashboardPage(ctk.CTkFrame):
         # Start the random rotation
         self.update_content()
         
-          # --- Dashboard Grid Section ---
+        # --- Dashboard Grid Section ---
         grid_frame = ctk.CTkFrame(self, fg_color="transparent")
         grid_frame.pack(pady=(10, 30))
 
@@ -86,9 +86,8 @@ class DashboardPage(ctk.CTkFrame):
                 fg_color="white",
                 corner_radius=20,
                 border_color="white",
-                # border_width=1,
-                width=300,   # ⬆ Bigger width
-                height=180   # ⬆ Bigger height
+                width=300,
+                height=180
             )
             card_frame.grid(row=row, column=col, padx=20, pady=20, sticky="nsew")
 
@@ -106,9 +105,9 @@ class DashboardPage(ctk.CTkFrame):
             )
             label.pack()
             
-             # Click Event - must be defined after all child widgets are created
+            # Click Event - must be defined after all child widgets are created
             def open_page(event=None, page=card["page"], name=card["name"]):
-                print(f"\033[94m [+] Card Frame cliked: {name}")
+                print(f"\033[94m [+] Card Frame clicked: {name}")
                 if hasattr(self.controller, "show_frame"):
                     self.controller.show_frame(page)
             
@@ -116,11 +115,20 @@ class DashboardPage(ctk.CTkFrame):
             card_frame.bind("<Button-1>", open_page)
             gif_label.bind("<Button-1>", open_page)
             label.bind("<Button-1>", open_page)
-            
 
+    def update_user_info(self, username):
+        """Update the AppBar with logged-in user's information"""
+        if username:
+            # Get the first letter of username (uppercase)
+            profile_letter = username[0].upper() if username else "U"
+            
+            # Update AppBar
+            self.appbar.update_user(profile_letter, username)
+            
+            print(f"\033[92m [✓] Dashboard updated for user: {username}")
 
     def update_content(self):
-        # Randomly change the image and quote every 5 seconds.
+        """Randomly change the image and quote every 5 seconds"""
         img = random.choice(self.images)
         quote = random.choice(self.quotes)
         self.image_label.configure(image=img)
@@ -134,6 +142,7 @@ class DashboardPage(ctk.CTkFrame):
         
     # --- GIF Animation Handler ---
     def animate_gif(self, gif_path, label, size=(80, 80)):
+        """Animate GIF frames"""
         gif = Image.open(gif_path)
         frames = [frame.copy().resize(size) for frame in ImageSequence.Iterator(gif)]
         photo_frames = [ctk.CTkImage(light_image=frame, size=size) for frame in frames]

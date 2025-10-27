@@ -1,0 +1,19 @@
+{
+    "users": [
+        {
+            "email": "dinnoguerba@gmail.com",
+            "username": "dinno1215",
+            "password": "e7faa8b075ab5b412691a8b097ebfee4bb5fd87c448bfffc35ed519a449702ce"
+        },
+        {
+            "email": "eunchae@gmail.com",
+            "username": "eungue1215",
+            "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+        },
+        {
+            "email": "lesserafim@gmaijl.com",
+            "username": "lesserafim1215",
+            "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+        }
+    ]
+}
