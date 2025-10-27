@@ -1,5 +1,6 @@
 import customtkinter as ctk  # type: ignore
 # from components.button import CustomButton
+import time
 
 class LoginPage(ctk.CTkFrame):
     
@@ -105,7 +106,7 @@ class LoginPage(ctk.CTkFrame):
         
         def open_register(event):
             self.controller.show_frame("RegisterPage")
-            print("Redirecting to registration page...")
+            print("\033[93m [+] Redirecting to Registration Page...")
 
         create_account_label.bind("<Button-1>", open_register)
         create_account_label.bind("<Enter>", lambda e: create_account_label.configure(text_color="#3B82F6"))
@@ -116,7 +117,9 @@ class LoginPage(ctk.CTkFrame):
     def handle_login(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
-        print(f"Username: {username}, Password: {password}")
+        print(f"\033[93m [+] Username: {username}, Password: {password}")
+        time.sleep(1)
+        print(f"\033[93m [+] Redirecting to the Dashboard Page...")
         self.controller.show_frame("DashboardPage")
         
         

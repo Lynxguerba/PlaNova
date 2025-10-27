@@ -106,9 +106,9 @@ class DashboardPage(ctk.CTkFrame):
             )
             label.pack()
             
-             
              # Click Event - must be defined after all child widgets are created
-            def open_page(event=None, page=card["page"]):
+            def open_page(event=None, page=card["page"], name=card["name"]):
+                print(f"\033[94m [+] Card Frame cliked: {name}")
                 if hasattr(self.controller, "show_frame"):
                     self.controller.show_frame(page)
             

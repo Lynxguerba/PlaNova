@@ -48,7 +48,7 @@ class AppBar(ctk.CTkFrame):
         settings_button.pack(side="right")
 
     def open_settings(self):
-        print("Settings button clicked")
+        print("\033[94m [+] Settings button clicked")
         if self.controller:
             self.controller.show_frame("SettingsPage")
         

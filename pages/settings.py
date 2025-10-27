@@ -32,7 +32,7 @@ class SettingsPage(ctk.CTkFrame):
             corner_radius=15,
             fg_color="transparent",
             hover_color="#D4E3FF",
-            command=lambda: controller.show_frame("DashboardPage")
+            command=lambda: (print("\033[92m [+] Back Button Clicked"), controller.show_frame("DashboardPage"))
         )
         back_btn.pack(side="left", padx=12, pady=10)
 
@@ -40,7 +40,6 @@ class SettingsPage(ctk.CTkFrame):
         content = ctk.CTkFrame(self, fg_color="transparent")
         content.grid(row=1, column=0, sticky="nsew", padx=30, pady=(10, 30))
         content.grid_propagate(True)
-        
 
         # --- Profile Circle (Centered) ---
         profile_frame = ctk.CTkFrame(content, fg_color="#92BAFF", corner_radius=100, width=100, height=100)
@@ -55,26 +54,26 @@ class SettingsPage(ctk.CTkFrame):
         info_frame.pack(pady=10, fill="x")
 
         # Email
-        email_label = ctk.CTkLabel(info_frame, text="Email", font=("Poppins SemiBold", 15), text_color="#374151")
+        email_label = ctk.CTkLabel(info_frame, text="Email", font=("Poppins SemiBold", 18), text_color="#374151")
         email_label.pack(anchor="w", pady=(5, 2))
-        email_value = ctk.CTkLabel(info_frame, text="dinnomguerba@gmail.com", font=("Poppins", 13), text_color="#6B7280")
+        email_value = ctk.CTkLabel(info_frame, text="dinnomguerba@gmail.com", font=("Poppins", 16), text_color="#6B7280")
         email_value.pack(anchor="w")
 
         # Username
-        username_label = ctk.CTkLabel(info_frame, text="Username", font=("Poppins SemiBold", 15), text_color="#374151")
+        username_label = ctk.CTkLabel(info_frame, text="Username", font=("Poppins SemiBold", 18), text_color="#374151")
         username_label.pack(anchor="w", pady=(10, 2))
-        username_value = ctk.CTkLabel(info_frame, text="dnguerba", font=("Poppins", 13), text_color="#6B7280")
+        username_value = ctk.CTkLabel(info_frame, text="dnguerba", font=("Poppins", 16), text_color="#6B7280")
         username_value.pack(anchor="w")
 
         # Password
-        password_label = ctk.CTkLabel(info_frame, text="Password", font=("Poppins SemiBold", 15), text_color="#374151")
+        password_label = ctk.CTkLabel(info_frame, text="Password", font=("Poppins SemiBold", 18), text_color="#374151")
         password_label.pack(anchor="w", pady=(10, 2))
 
         password_frame = ctk.CTkFrame(info_frame, fg_color="transparent")
         password_frame.pack(anchor="w")
 
         self.password_hidden = True
-        self.password_value = ctk.CTkLabel(password_frame, text="********", font=("Poppins", 13), text_color="#6B7280")
+        self.password_value = ctk.CTkLabel(password_frame, text="********", font=("Poppins", 16), text_color="#6B7280")
         self.password_value.pack(side="left", padx=(0, 8))
 
         toggle_button = ctk.CTkButton(
@@ -101,7 +100,7 @@ class SettingsPage(ctk.CTkFrame):
             corner_radius=10,
             width=400,
             height=55,
-            command=lambda: controller.show_frame("LoginPage")
+            command=lambda: (print("\033[91m [+] Logout account"),controller.show_frame("LoginPage"))
         )
         logout_button.pack(pady=(40, 10))
 

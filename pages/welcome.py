@@ -60,7 +60,7 @@ class WelcomePage(ctk.CTkFrame):
             corner_radius=12,
             height=70,
             width=400,
-            command=lambda: controller.show_frame("LoginPage")
+            command=lambda: (print("\033[93m [+] Redirecting to the Login Page..."),controller.show_frame("LoginPage"))
         )
         # Place near bottom with padding
         get_started_btn.grid(row=3, column=0, sticky="s", padx=40, pady=(10, 30))

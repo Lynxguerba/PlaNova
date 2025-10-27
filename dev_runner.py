@@ -13,7 +13,7 @@ class ReloadHandler(FileSystemEventHandler):
         if self.process:
             self.process.terminate()
             self.process.wait()
-        print("\n🔁 Reloading...")
+        print("\033[92m 🔁 Reloading...")
         self.process = subprocess.Popen(["python", "main.py"])
 
     def on_modified(self, event):
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     observer.schedule(event_handler, path=".", recursive=True)
     observer.start()
 
-    print("👀 Watching for changes... (Ctrl+C to stop)")
+    print(" [+] Watching for changes... (Ctrl+C to stop)")
     try:
         while True:
             time.sleep(1)

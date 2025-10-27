@@ -50,7 +50,7 @@ class App(ctk.CTk):
             frame.grid(row=0, column=0, sticky="nsew")
 
         # --- Show the first page---
-        self.show_frame("DashboardPage")
+        self.show_frame("WelcomePage")
 
     def show_frame(self, page_name):
         #  Raise the specified page to the front.
