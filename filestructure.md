@@ -1,38 +1,31 @@
 PlaNova/
 │
-├── main.py                        # Entry point for the app
-│
-├── config/
-│   ├── __init__.py
-│   ├── settings.py                 # App-wide constants (colors, fonts, paths)
-│   └── themes.py                   # Theme definitions (dark/light)
+├── main.py                       
 │
 ├── core/
 │   ├── __init__.py
-│   ├── app.py                      # Tkinter root window setup
-│   ├── database.py                 # Database or JSON file handling
-│   ├── utils.py                    # Helper functions (formatting, timers, etc.)
-│
+│   └── app.py                  
+│                     
 ├── assets/
-│   ├── icons/                      # App icons, buttons, etc.
-│   ├── images/                     # Static images
-│   └── fonts/                      # Custom fonts if needed
-│
+│   ├── icons/                      
+│   └── images/                              
+│            
 ├── components/
 │   ├── __init__.py
-│   ├── navbar.py                   # Navigation bar widget
-│   ├── sidebar.py                  # Sidebar (if used)
-│   ├── task_card.py                # Custom frame to display a single task
-│   ├── note_widget.py              # Widget to display/edit notes
-│   └── button.py                   # Reusable styled button class
+│   ├── appbar.py                                     
+│   └── button.py                   
 │
 ├── pages/
 │   ├── __init__.py
-│   ├── dashboard_page.py           # Dashboard view
-│   ├── tasks_page.py               # Task management view
-│   ├── notes_page.py               # Notes management view
-│   └── settings_page.py            # Settings and preferences
+│   ├── bin.py          
+│   ├── completed.py           
+│   ├── dashboard.py               
+│   ├── login.py               
+│   ├── register.py               
+│   ├── settings.py               
+│   ├── tasks.py               
+│   ├── upcoming.py               
+│   └── welcome.py            
 │
 └── data/
-    ├── database.db                 # SQLite database (or JSON file)
-    └── preferences.json            # User settings storage
+    └── preferences.json            

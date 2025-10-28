@@ -7,13 +7,15 @@ import uuid
 
 
 class CreateTaskModal(ctk.CTkToplevel):
-    def __init__(self, parent):
+    def __init__(self, parent, task_data=None):
         super().__init__(parent)
         
         self.result = None
+        self.task_data = task_data  # Store task data for editing
+        self.is_edit_mode = task_data is not None
         
         # Configure modal
-        self.title("Create New Task")
+        self.title("Edit Task" if self.is_edit_mode else "Create New Task")
         self.geometry("500x600")
         self.resizable(False, False)
         
@@ -34,6 +36,10 @@ class CreateTaskModal(ctk.CTkToplevel):
         
         # Create content
         self.create_content()
+        
+        # If editing, populate fields
+        if self.is_edit_mode:
+            self.populate_fields()
     
     def _set_modal(self):
         """Set modal behavior after window is viewable"""
@@ -51,7 +57,7 @@ class CreateTaskModal(ctk.CTkToplevel):
         # Header
         header = ctk.CTkLabel(
             container,
-            text="Create New Task",
+            text="Edit Task" if self.is_edit_mode else "Create New Task",
             font=("Poppins SemiBold", 24),
             text_color="#111827"
         )
@@ -181,10 +187,10 @@ class CreateTaskModal(ctk.CTkToplevel):
         )
         clear_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
-        # Create button
-        create_btn = ctk.CTkButton(
+        # Create/Update button
+        action_btn = ctk.CTkButton(
             buttons_frame,
-            text="Create Task",
+            text="Update Task" if self.is_edit_mode else "Create Task",
             height=45,
             font=("Poppins SemiBold", 14),
             fg_color="#3B82F6",
@@ -192,7 +198,24 @@ class CreateTaskModal(ctk.CTkToplevel):
             text_color="white",
             command=self.create_task
         )
-        create_btn.pack(side="left", fill="x", expand=True)
+        action_btn.pack(side="left", fill="x", expand=True)
+    
+    def populate_fields(self):
+        """Populate fields with existing task data"""
+        if self.task_data:
+            # Set title
+            self.title_entry.insert(0, self.task_data.get('title', ''))
+            
+            # Set description
+            if self.task_data.get('description'):
+                self.description_textbox.insert("1.0", self.task_data.get('description'))
+            
+            # Set time if available
+            if self.task_data.get('time'):
+                time_parts = self.task_data['time'].split(':')
+                if len(time_parts) == 2:
+                    self.hour_spinbox.set(time_parts[0])
+                    self.minute_spinbox.set(time_parts[1])
     
     def clear_inputs(self):
         """Clear all input fields"""
@@ -203,7 +226,7 @@ class CreateTaskModal(ctk.CTkToplevel):
         print("\033[93m [*] Inputs cleared")
     
     def create_task(self):
-        """Validate and create task"""
+        """Validate and create/update task"""
         title = self.title_entry.get().strip()
         description = self.description_textbox.get("1.0", "end").strip()
         hour = self.hour_spinbox.get()
@@ -215,17 +238,29 @@ class CreateTaskModal(ctk.CTkToplevel):
             return
         
         # Store result
-        self.result = {
-            "id": str(uuid.uuid4()),  # Unique ID for each task
-            "title": title,
-            "description": description,
-            "time": f"{hour}:{minute}" if hour and minute else None,
-            "completed": False,
-            "deleted": False,
-            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
+        if self.is_edit_mode:
+            # Update existing task
+            self.result = {
+                **self.task_data,  # Keep existing fields
+                "title": title,
+                "description": description,
+                "time": f"{hour}:{minute}" if hour and minute else None,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            print(f"\033[92m [+] Task updated: {self.result}")
+        else:
+            # Create new task
+            self.result = {
+                "id": str(uuid.uuid4()),  # Unique ID for each task
+                "title": title,
+                "description": description,
+                "time": f"{hour}:{minute}" if hour and minute else None,
+                "completed": False,
+                "deleted": False,
+                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            print(f"\033[92m [+] Task created: {self.result}")
         
-        print(f"\033[92m [+] Task created: {self.result}")
         self.destroy()
     
     def show_error(self, message):
@@ -475,6 +510,19 @@ class TasksPage(ctk.CTkFrame):
         buttons_frame = ctk.CTkFrame(card_content, fg_color="transparent")
         buttons_frame.pack(fill="x", pady=(12, 0))
         
+        # Edit button
+        edit_btn = ctk.CTkButton(
+            buttons_frame,
+            text="✏️ Edit",
+            height=38,
+            corner_radius=8,
+            fg_color="#F59E0B",
+            hover_color="#D97706",
+            font=("Poppins Medium", 13),
+            command=lambda: self.edit_task(task['id'])
+        )
+        edit_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        
         # Complete button
         complete_btn = ctk.CTkButton(
             buttons_frame,
@@ -491,7 +539,7 @@ class TasksPage(ctk.CTkFrame):
         # Delete button
         delete_btn = ctk.CTkButton(
             buttons_frame,
-            text="🗑 Move to Bin",
+            text="🗑️",
             height=38,
             corner_radius=8,
             fg_color="#EF4444",
@@ -500,6 +548,47 @@ class TasksPage(ctk.CTkFrame):
             command=lambda: self.move_to_bin(task['id'])
         )
         delete_btn.pack(side="left", fill="x", expand=True)
+    
+    def edit_task(self, task_id):
+        """Open edit modal for a task"""
+        # Find the task
+        task_to_edit = None
+        for task in self.all_tasks:
+            if task['id'] == task_id:
+                task_to_edit = task
+                break
+        
+        if not task_to_edit:
+            print(f"\033[91m [!] Task not found: {task_id}")
+            return
+        
+        print(f"\033[92m [+] Editing task: {task_to_edit['title']}")
+        
+        # Open edit modal with task data
+        modal = CreateTaskModal(self, task_data=task_to_edit)
+        self.wait_window(modal)
+        
+        # Check if task was updated
+        if modal.result:
+            # Find and update the task in all_tasks
+            for i, task in enumerate(self.all_tasks):
+                if task['id'] == task_id:
+                    self.all_tasks[i] = modal.result
+                    break
+            
+            # Update in active tasks if it exists there
+            for i, task in enumerate(self.tasks):
+                if task['id'] == task_id:
+                    self.tasks[i] = modal.result
+                    break
+            
+            print(f"\033[92m [✓] Task updated in list: {modal.result}")
+            
+            # Save to JSON
+            self.save_tasks()
+            
+            # Refresh display
+            self.display_tasks()
     
     def mark_complete(self, task_id):
         """Mark task as completed"""

@@ -10,13 +10,15 @@ from pages.dashboard import DashboardPage
 
 
 class CreateUpcomingTaskModal(ctk.CTkToplevel):
-    def __init__(self, parent):
+    def __init__(self, parent, task_data=None):
         super().__init__(parent)
         
         self.result = None
+        self.task_data = task_data  # Store task data for editing
+        self.is_edit_mode = task_data is not None
         
         # Configure modal
-        self.title("Create Upcoming Task")
+        self.title("Edit Upcoming Task" if self.is_edit_mode else "Create Upcoming Task")
         self.geometry("500x750")
         self.resizable(False, False)
         
@@ -37,6 +39,10 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         
         # Create content
         self.create_content()
+        
+        # If editing, populate fields
+        if self.is_edit_mode:
+            self.populate_fields()
     
     def _set_modal(self):
         """Set modal behavior after window is viewable"""
@@ -54,7 +60,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         # Header
         header = ctk.CTkLabel(
             container,
-            text="Create Upcoming Task",
+            text="Edit Upcoming Task" if self.is_edit_mode else "Create Upcoming Task",
             font=("Poppins SemiBold", 24),
             text_color="#111827"
         )
@@ -281,10 +287,10 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         )
         clear_btn.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
-        # Create button
-        create_btn = ctk.CTkButton(
+        # Create/Update button
+        action_btn = ctk.CTkButton(
             buttons_frame,
-            text="Create Task",
+            text="Update Task" if self.is_edit_mode else "Create Task",
             height=45,
             font=("Poppins SemiBold", 14),
             fg_color="#3B82F6",
@@ -292,7 +298,41 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
             text_color="white",
             command=self.create_task
         )
-        create_btn.pack(side="left", fill="x", expand=True)
+        action_btn.pack(side="left", fill="x", expand=True)
+    
+    def populate_fields(self):
+        """Populate fields with existing task data"""
+        if self.task_data:
+            # Set title
+            self.title_entry.insert(0, self.task_data.get('title', ''))
+            
+            # Set description
+            if self.task_data.get('description'):
+                self.description_textbox.insert("1.0", self.task_data.get('description'))
+            
+            # Set date if available
+            if self.task_data.get('due_date'):
+                try:
+                    due_date_obj = datetime.strptime(self.task_data['due_date'], "%Y-%m-%d")
+                    
+                    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                    
+                    self.year_spinbox.set(str(due_date_obj.year))
+                    self.month_spinbox.set(months[due_date_obj.month - 1])
+                    self.day_spinbox.set(str(due_date_obj.day))
+                    
+                    # Update days after setting month and year
+                    self._update_days()
+                except Exception as e:
+                    print(f"\033[91m [-] Error parsing date: {e}")
+            
+            # Set time if available
+            if self.task_data.get('due_time'):
+                time_parts = self.task_data['due_time'].split(':')
+                if len(time_parts) == 2:
+                    self.hour_spinbox.set(time_parts[0])
+                    self.minute_spinbox.set(time_parts[1])
     
     def _update_days(self, *args):
         """Update the day dropdown based on selected month and year"""
@@ -333,7 +373,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         print("\033[93m [*] Inputs cleared")
     
     def create_task(self):
-        """Validate and create task"""
+        """Validate and create/update task"""
         title = self.title_entry.get().strip()
         description = self.description_textbox.get("1.0", "end").strip()
         
@@ -355,25 +395,38 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
             # Create datetime object
             due_datetime = datetime(year, month, day, hour, minute)
             
-            # Check if date is in the past
-            if due_datetime < datetime.now():
+            # Check if date is in the past (only for new tasks)
+            if not self.is_edit_mode and due_datetime < datetime.now():
                 self.show_error("Due date cannot be in the past!")
                 return
             
             # Store result
-            self.result = {
-                "id": str(uuid.uuid4()),
-                "title": title,
-                "description": description,
-                "due_date": due_datetime.strftime("%Y-%m-%d"),
-                "due_time": due_datetime.strftime("%H:%M"),
-                "completed": False,
-                "deleted": False,
-                "is_upcoming": True,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
+            if self.is_edit_mode:
+                # Update existing task
+                self.result = {
+                    **self.task_data,  # Keep existing fields
+                    "title": title,
+                    "description": description,
+                    "due_date": due_datetime.strftime("%Y-%m-%d"),
+                    "due_time": due_datetime.strftime("%H:%M"),
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                print(f"\033[92m [+] Upcoming task updated: {self.result}")
+            else:
+                # Create new task
+                self.result = {
+                    "id": str(uuid.uuid4()),
+                    "title": title,
+                    "description": description,
+                    "due_date": due_datetime.strftime("%Y-%m-%d"),
+                    "due_time": due_datetime.strftime("%H:%M"),
+                    "completed": False,
+                    "deleted": False,
+                    "is_upcoming": True,
+                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                print(f"\033[92m [+] Upcoming task created: {self.result}")
             
-            print(f"\033[92m [+] Upcoming task created: {self.result}")
             self.destroy()
             
         except ValueError as e:
@@ -666,6 +719,19 @@ class UpcomingPage(ctk.CTkFrame):
         buttons_frame = ctk.CTkFrame(card_content, fg_color="transparent")
         buttons_frame.pack(fill="x", pady=(12, 0))
         
+        # Edit button
+        edit_btn = ctk.CTkButton(
+            buttons_frame,
+            text="✏️ Edit",
+            height=38,
+            corner_radius=8,
+            fg_color="#F59E0B",
+            hover_color="#D97706",
+            font=("Poppins Medium", 13),
+            command=lambda: self.edit_task(task['id'])
+        )
+        edit_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        
         # Complete button
         complete_btn = ctk.CTkButton(
             buttons_frame,
@@ -682,7 +748,7 @@ class UpcomingPage(ctk.CTkFrame):
         # Delete button
         delete_btn = ctk.CTkButton(
             buttons_frame,
-            text="🗑 Move to Bin",
+            text="🗑️ Move to Bin",
             height=38,
             corner_radius=8,
             fg_color="#EF4444",
@@ -692,6 +758,47 @@ class UpcomingPage(ctk.CTkFrame):
         )
         delete_btn.pack(side="left", fill="x", expand=True)
     
+    def edit_task(self, task_id):
+        """Open edit modal for a task"""
+        # Find the task
+        task_to_edit = None
+        for task in self.all_tasks:
+            if task['id'] == task_id:
+                task_to_edit = task
+                break
+        
+        if not task_to_edit:
+            print(f"\033[91m [!] Task not found: {task_id}")
+            return
+        
+        print(f"\033[92m [+] Editing task: {task_to_edit['title']}")
+        
+        # Open edit modal with task data
+        modal = CreateUpcomingTaskModal(self, task_data=task_to_edit)
+        self.wait_window(modal)
+        
+        # Check if task was updated
+        if modal.result:
+            # Find and update the task in all_tasks
+            for i, task in enumerate(self.all_tasks):
+                if task['id'] == task_id:
+                    self.all_tasks[i] = modal.result
+                    break
+            
+            # Update in upcoming tasks if it exists there
+            for i, task in enumerate(self.upcoming_tasks):
+                if task['id'] == task_id:
+                    self.upcoming_tasks[i] = modal.result
+                    break
+            
+            print(f"\033[92m [✓] Task updated in list: {modal.result}")
+            
+            # Save to JSON
+            self.save_tasks()
+            
+            # Refresh display
+            self.display_upcoming_tasks()
+        
     def mark_complete(self, task_id):
         """Mark task as completed"""
         # Find and update task in all_tasks
@@ -722,38 +829,38 @@ class UpcomingPage(ctk.CTkFrame):
         self.display_upcoming_tasks()
         
         print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Upcoming: {len(self.upcoming_tasks)}")
-    
-    def move_to_bin(self, task_id):
-        """Move task to bin"""
-        # Find and update task in all_tasks
-        task_found = False
-        for task in self.all_tasks:
-            if task['id'] == task_id:
-                task['deleted'] = True
-                task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                print(f"\033[93m [!] Task moved to bin: {task['title']}")
-                task_found = True
-                break
-        
-        # If task not found in all_tasks, find in upcoming_tasks
-        if not task_found:
-            for task in self.upcoming_tasks:
+
+        def move_to_bin(self, task_id):
+            """Move task to bin"""
+            # Find and update task in all_tasks
+            task_found = False
+            for task in self.all_tasks:
                 if task['id'] == task_id:
                     task['deleted'] = True
                     task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     print(f"\033[93m [!] Task moved to bin: {task['title']}")
-                    self.all_tasks.append(task)
+                    task_found = True
                     break
-        
-        # Remove from upcoming tasks display
-        self.upcoming_tasks = [t for t in self.upcoming_tasks if t['id'] != task_id]
-        
-        # Save all tasks and refresh
-        self.save_tasks()
-        self.display_upcoming_tasks()
-        
-        print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Upcoming: {len(self.upcoming_tasks)}")
-    
+            
+            # If task not found in all_tasks, find in upcoming_tasks
+            if not task_found:
+                for task in self.upcoming_tasks:
+                    if task['id'] == task_id:
+                        task['deleted'] = True
+                        task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        print(f"\033[93m [!] Task moved to bin: {task['title']}")
+                        self.all_tasks.append(task)
+                        break
+            
+            # Remove from upcoming tasks display
+            self.upcoming_tasks = [t for t in self.upcoming_tasks if t['id'] != task_id]
+            
+            # Save all tasks and refresh
+            self.save_tasks()
+            self.display_upcoming_tasks()
+            
+            print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Upcoming: {len(self.upcoming_tasks)}")
+
     def create_floating_button(self):
         fab_container = ctk.CTkFrame(self, fg_color="transparent")
         fab_container.place(relx=1.0, rely=1.0, x=-30, y=-30, anchor="se")
@@ -791,7 +898,7 @@ class UpcomingPage(ctk.CTkFrame):
             )
         
         fab.pack()
-        
+    
     def create_task(self):
         """Open modal to create a new upcoming task"""
         print("\033[92m [+] Opening create task modal")
@@ -820,7 +927,7 @@ class UpcomingPage(ctk.CTkFrame):
             print(f"\033[92m [✓] Task added: {modal.result['title']}")
         else:
             print("\033[93m [*] Task creation cancelled")
-    
+
     def go_back(self):
         """Navigate back to the home page"""
         print("\033[92m [+] Navigating back from Upcoming page")
@@ -831,7 +938,7 @@ class UpcomingPage(ctk.CTkFrame):
         elif hasattr(self.controller, 'show_frame'):
             # Try to get the home page class
             try:
-                from pages.dashboard import DashboardPagePage  # Adjust import as needed
+                from pages.dashboard import DashboardPage  # Adjust import as needed
                 self.controller.show_frame(DashboardPage)
             except ImportError:
                 print("\033[91m [-] Could not import home page")

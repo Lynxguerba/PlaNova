@@ -18,11 +18,12 @@
                 {
                     "id": "43e42cc8-a82f-486d-bd7f-63c474f75a71",
                     "title": "Cooking Session",
-                    "description": "Try to bake some cake for dinner",
+                    "description": "Try to bake some cake",
                     "time": "08:30",
                     "completed": false,
                     "deleted": false,
-                    "created_at": "2025-10-28 08:10:27"
+                    "created_at": "2025-10-28 08:10:27",
+                    "updated_at": "2025-10-28 10:31:53"
                 },
                 {
                     "id": "ef224952-21f5-4254-9e7b-35a4b76222a2",
@@ -56,6 +57,72 @@
                     "completed": false,
                     "deleted": false,
                     "created_at": "2025-10-28 07:49:52"
+                }
+            ]
+        },
+        {
+            "email": "drek@email.com",
+            "username": "Drek344",
+            "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+            "tasks": [
+                {
+                    "id": "d5db4c2b-ec47-4a61-b25a-00262024ca56",
+                    "title": "Deep learnign on LLM",
+                    "description": "Prepration for developing large project about AI.",
+                    "time": "14:30",
+                    "completed": true,
+                    "deleted": false,
+                    "created_at": "2025-10-28 08:52:11",
+                    "completed_at": "2025-10-28 08:52:48"
+                },
+                {
+                    "id": "f86f0a28-4bdc-481d-99b4-03526b797b89",
+                    "title": "Coding Session",
+                    "description": "",
+                    "time": "08:50",
+                    "completed": false,
+                    "deleted": false,
+                    "created_at": "2025-10-28 08:54:33"
+                },
+                {
+                    "id": "cde9f446-3b4d-4780-a742-4a2d419cc482",
+                    "title": "Project Presentation",
+                    "description": "LLM projection presentation for school purposes",
+                    "due_date": "2025-12-28",
+                    "due_time": "08:00",
+                    "completed": false,
+                    "deleted": false,
+                    "is_upcoming": true,
+                    "created_at": "2025-10-28 08:56:20",
+                    "updated_at": "2025-10-28 10:47:39"
+                }
+            ]
+        },
+        {
+            "email": "ceby@gmail.com",
+            "username": "ceby1215",
+            "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+            "tasks": [
+                {
+                    "id": "2f4d5f99-d6dd-4a4f-9c90-53f0dbbc9cc5",
+                    "title": "Cleaning BoardHouse",
+                    "description": "All plates, glass, tables and folding clothes",
+                    "time": "20:50",
+                    "completed": true,
+                    "deleted": false,
+                    "created_at": "2025-10-28 10:53:24",
+                    "completed_at": "2025-10-28 10:54:39"
+                },
+                {
+                    "id": "dfb2b7d9-65b4-41db-ac22-7ac49d4fd8ed",
+                    "title": "Vollyball Event",
+                    "description": "",
+                    "due_date": "2026-10-28",
+                    "due_time": "10:55",
+                    "completed": false,
+                    "deleted": false,
+                    "is_upcoming": true,
+                    "created_at": "2025-10-28 10:55:38"
                 }
             ]
         }
