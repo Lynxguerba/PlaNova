@@ -46,8 +46,8 @@ class SettingsPage(ctk.CTkFrame):
         profile_frame.pack(pady=(30, 10))
         profile_frame.pack_propagate(False)
 
-        profile_label = ctk.CTkLabel(profile_frame, text="D", font=("Poppins Bold", 40), text_color="#1E3A8A")
-        profile_label.place(relx=0.5, rely=0.5, anchor="center")
+        self.profile_label = ctk.CTkLabel(profile_frame, text="U", font=("Poppins Bold", 40), text_color="#1E3A8A")
+        self.profile_label.place(relx=0.5, rely=0.5, anchor="center")
 
         # --- Info Section ---
         info_frame = ctk.CTkFrame(content, fg_color="transparent")
@@ -56,14 +56,14 @@ class SettingsPage(ctk.CTkFrame):
         # Email
         email_label = ctk.CTkLabel(info_frame, text="Email", font=("Poppins SemiBold", 18), text_color="#374151")
         email_label.pack(anchor="w", pady=(5, 2))
-        email_value = ctk.CTkLabel(info_frame, text="dinnomguerba@gmail.com", font=("Poppins", 16), text_color="#6B7280")
-        email_value.pack(anchor="w")
+        self.email_value = ctk.CTkLabel(info_frame, text="user@example.com", font=("Poppins", 16), text_color="#6B7280")
+        self.email_value.pack(anchor="w")
 
         # Username
         username_label = ctk.CTkLabel(info_frame, text="Username", font=("Poppins SemiBold", 18), text_color="#374151")
         username_label.pack(anchor="w", pady=(10, 2))
-        username_value = ctk.CTkLabel(info_frame, text="dnguerba", font=("Poppins", 16), text_color="#6B7280")
-        username_value.pack(anchor="w")
+        self.username_value = ctk.CTkLabel(info_frame, text="username", font=("Poppins", 16), text_color="#6B7280")
+        self.username_value.pack(anchor="w")
 
         # Password
         password_label = ctk.CTkLabel(info_frame, text="Password", font=("Poppins SemiBold", 18), text_color="#374151")
@@ -73,6 +73,7 @@ class SettingsPage(ctk.CTkFrame):
         password_frame.pack(anchor="w")
 
         self.password_hidden = True
+        self.actual_password = ""  # Store actual plain text password
         self.password_value = ctk.CTkLabel(password_frame, text="********", font=("Poppins", 16), text_color="#6B7280")
         self.password_value.pack(side="left", padx=(0, 8))
 
@@ -100,14 +101,50 @@ class SettingsPage(ctk.CTkFrame):
             corner_radius=10,
             width=400,
             height=55,
-            command=lambda: (print("\033[91m [+] Logout account"),controller.show_frame("LoginPage"))
+            command=self.handle_logout
         )
         logout_button.pack(pady=(40, 10))
 
-    # === PASSWORD TOGGLE FUNCTION ===
+    def update_user_info(self, user_data):
+        """Update the settings page with logged-in user's information"""
+        if user_data:
+            # Update profile letter
+            username = user_data.get("username", "User")
+            profile_letter = username[0].upper() if username else "U"
+            self.profile_label.configure(text=profile_letter)
+            
+            # Update email
+            email = user_data.get("email", "user@example.com")
+            self.email_value.configure(text=email)
+            
+            # Update username
+            self.username_value.configure(text=username)
+            
+            # Store plain text password from session
+            # This will be passed from login after successful authentication
+            self.actual_password = user_data.get("plain_password", "")
+            
+            print(f"\033[92m [✓] Settings updated for user: {username}")
+
     def toggle_password(self):
+        """Toggle password visibility"""
         if self.password_hidden:
-            self.password_value.configure(text="dnguerba1215")  # example visible password
+            # Show the plain text password
+            if self.actual_password:
+                self.password_value.configure(text=self.actual_password)
+            else:
+                self.password_value.configure(text="********")
         else:
             self.password_value.configure(text="********")
         self.password_hidden = not self.password_hidden
+
+    def handle_logout(self):
+        """Handle logout action"""
+        print("\033[91m [+] Logging out account")
+        
+        # Clear current user data from controller
+        if hasattr(self.controller, 'current_user'):
+            self.controller.current_user = None
+        
+        # Redirect to login page
+        self.controller.show_frame("LoginPage")

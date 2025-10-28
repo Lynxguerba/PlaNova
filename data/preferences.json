@@ -3,7 +3,40 @@
         {
             "email": "dinnoguerba@gmail.com",
             "username": "dinno1215",
-            "password": "e7faa8b075ab5b412691a8b097ebfee4bb5fd87c448bfffc35ed519a449702ce"
+            "password": "e7faa8b075ab5b412691a8b097ebfee4bb5fd87c448bfffc35ed519a449702ce",
+            "tasks": [
+                {
+                    "id": "998456ea-6b58-4802-a6a7-c6071731d4c5",
+                    "title": "Codind Session",
+                    "description": "working in python project",
+                    "time": "20:40",
+                    "completed": true,
+                    "deleted": false,
+                    "created_at": "2025-10-28 07:43:10",
+                    "completed_at": "2025-10-28 08:05:25"
+                },
+                {
+                    "id": "43e42cc8-a82f-486d-bd7f-63c474f75a71",
+                    "title": "Cooking Session",
+                    "description": "Try to bake some cake for dinner",
+                    "time": "08:30",
+                    "completed": false,
+                    "deleted": false,
+                    "created_at": "2025-10-28 08:10:27"
+                },
+                {
+                    "id": "ef224952-21f5-4254-9e7b-35a4b76222a2",
+                    "title": "Drum Rehersal for events",
+                    "description": "practice drums",
+                    "due_date": "2025-12-28",
+                    "due_time": "08:25",
+                    "completed": true,
+                    "deleted": false,
+                    "is_upcoming": true,
+                    "created_at": "2025-10-28 08:30:01",
+                    "completed_at": "2025-10-28 08:30:13"
+                }
+            ]
         },
         {
             "email": "eunchae@gmail.com",
@@ -13,7 +46,18 @@
         {
             "email": "lesserafim@gmaijl.com",
             "username": "lesserafim1215",
-            "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+            "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+            "tasks": [
+                {
+                    "id": "1a52e810-4184-419f-a643-696496fb897a",
+                    "title": "Drum event rehersal",
+                    "description": "up time practice and rehersal early",
+                    "time": "07:45",
+                    "completed": false,
+                    "deleted": false,
+                    "created_at": "2025-10-28 07:49:52"
+                }
+            ]
         }
     ]
 }

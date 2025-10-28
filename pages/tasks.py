@@ -1,6 +1,9 @@
 from PIL import Image  
 import customtkinter as ctk  # type: ignore
 from datetime import datetime
+import json
+import os
+import uuid
 
 
 class CreateTaskModal(ctk.CTkToplevel):
@@ -213,9 +216,13 @@ class CreateTaskModal(ctk.CTkToplevel):
         
         # Store result
         self.result = {
+            "id": str(uuid.uuid4()),  # Unique ID for each task
             "title": title,
             "description": description,
-            "time": f"{hour}:{minute}" if hour and minute else None
+            "time": f"{hour}:{minute}" if hour and minute else None,
+            "completed": False,
+            "deleted": False,
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
         print(f"\033[92m [+] Task created: {self.result}")
@@ -243,24 +250,40 @@ class TasksPage(ctk.CTkFrame):
         self.controller = controller
         self.navigate_callback = navigate_callback or (controller.show_frame if controller else None)
         
-        # Store tasks
+        # Store all tasks (including completed and deleted)
+        self.all_tasks = []
+        # Store only active tasks for display
         self.tasks = []
         
         # Create app bar
         self.create_app_bar()
         
-        # Main content area
-        self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        # Main content area with scrollable frame (hidden scrollbar)
+        self.content_container = ctk.CTkScrollableFrame(
+            self, 
+            fg_color="transparent",
+            scrollbar_button_color="#F9FAFB",  # Same as background - invisible
+            scrollbar_button_hover_color="#E5E7EB"  # Light gray on hover
+        )
+        self.content_container.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Tasks content (placeholder)
-        self.create_tasks_content()
+        # Tasks content
+        self.tasks_list_frame = ctk.CTkFrame(self.content_container, fg_color="transparent")
+        self.tasks_list_frame.pack(fill="both", expand=True)
+        
+        # Load and display tasks
+        self.load_tasks()
+        self.display_tasks()
         
         # Floating create button
         self.create_floating_button()
     
+    def tkraise(self, aboveThis=None):
+        """Override tkraise to refresh tasks when page is shown"""
+        super().tkraise(aboveThis)
+        self.refresh_tasks()
+    
     def create_app_bar(self):
-        
         app_bar = ctk.CTkFrame(self, fg_color="#F9FAFB", height=100, corner_radius=0)
         app_bar.pack(fill="x", side="top")
         app_bar.pack_propagate(False)
@@ -311,15 +334,238 @@ class TasksPage(ctk.CTkFrame):
         )
         title.pack(side="left", padx=15)
     
-    def create_tasks_content(self):
-        placeholder = ctk.CTkLabel(
-            self.content_frame,
-            text="No tasks yet\nClick the + button to create a task",
-            font=("Poppins", 14),
-            text_color="#9CA3AF",
-            justify="center"
+    def load_tasks(self):
+        """Load tasks from JSON file for current user"""
+        try:
+            file_path = "data/preferences.json"
+            
+            if not os.path.exists(file_path):
+                print("\033[91m [!] Error: preferences.json file not found")
+                return
+            
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+            
+            # Get current user
+            if hasattr(self.controller, 'current_user'):
+                username = self.controller.current_user.get('username')
+                
+                # Find user's tasks
+                for user in data.get('users', []):
+                    if user.get('username') == username:
+                        # Load ALL tasks
+                        self.all_tasks = user.get('tasks', [])
+                        # Filter only active tasks for display (not deleted, not completed)
+                        self.tasks = [
+                            t for t in self.all_tasks 
+                            if not t.get('deleted', False) and not t.get('completed', False)
+                        ]
+                        print(f"\033[92m [✓] Loaded {len(self.tasks)} active tasks for user: {username}")
+                        return
+            
+            print("\033[93m [!] No current user found")
+            
+        except Exception as e:
+            print(f"\033[91m [!] Error loading tasks: {str(e)}")
+    
+    def save_tasks(self):
+        """Save tasks to JSON file for current user"""
+        try:
+            file_path = "data/preferences.json"
+            
+            # Load existing data
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+            
+            # Get current user
+            if hasattr(self.controller, 'current_user'):
+                username = self.controller.current_user.get('username')
+                
+                # Update user's tasks
+                for user in data.get('users', []):
+                    if user.get('username') == username:
+                        user['tasks'] = self.all_tasks
+                        break
+                
+                # Save back to file
+                with open(file_path, 'w') as file:
+                    json.dump(data, file, indent=4)
+                
+                print(f"\033[92m [✓] Tasks saved for user: {username}")
+            
+        except Exception as e:
+            print(f"\033[91m [!] Error saving tasks: {str(e)}")
+    
+    def display_tasks(self):
+        """Display all active tasks"""
+        # Clear existing widgets
+        for widget in self.tasks_list_frame.winfo_children():
+            widget.destroy()
+        
+        if not self.tasks:
+            # Show placeholder
+            placeholder = ctk.CTkLabel(
+                self.tasks_list_frame,
+                text="No tasks yet\nClick the + button to create a task",
+                font=("Poppins", 14),
+                text_color="#9CA3AF",
+                justify="center"
+            )
+            placeholder.pack(expand=True, pady=50)
+        else:
+            # Display each task
+            for task in self.tasks:
+                self.create_task_card(task)
+    
+    def create_task_card(self, task):
+        """Create a task card widget"""
+        # Main card frame
+        card = ctk.CTkFrame(
+            self.tasks_list_frame,
+            fg_color="#FFFFFF",
+            corner_radius=12,
+            border_width=1,
+            border_color="#E5E7EB"
         )
-        placeholder.pack(expand=True)
+        card.pack(fill="x", pady=8, padx=5)
+        
+        # Inner container
+        card_content = ctk.CTkFrame(card, fg_color="transparent")
+        card_content.pack(fill="both", padx=15, pady=12)
+        
+        # Task info
+        info_frame = ctk.CTkFrame(card_content, fg_color="transparent")
+        info_frame.pack(fill="x")
+        
+        # Title
+        title_label = ctk.CTkLabel(
+            info_frame,
+            text=task['title'],
+            font=("Poppins SemiBold", 15),
+            text_color="#111827",
+            anchor="w"
+        )
+        title_label.pack(fill="x")
+        
+        # Description
+        if task.get('description'):
+            desc_label = ctk.CTkLabel(
+                info_frame,
+                text=task['description'],
+                font=("Poppins", 12),
+                text_color="#6B7280",
+                anchor="w",
+                wraplength=600,
+                justify="left"
+            )
+            desc_label.pack(fill="x", pady=(3, 0))
+        
+        # Time
+        if task.get('time'):
+            time_label = ctk.CTkLabel(
+                info_frame,
+                text=f"⏰ Due: {task['time']}",
+                font=("Poppins", 11),
+                text_color="#3B82F6",
+                anchor="w"
+            )
+            time_label.pack(fill="x", pady=(5, 0))
+        
+        # Buttons container at the bottom
+        buttons_frame = ctk.CTkFrame(card_content, fg_color="transparent")
+        buttons_frame.pack(fill="x", pady=(12, 0))
+        
+        # Complete button
+        complete_btn = ctk.CTkButton(
+            buttons_frame,
+            text="✓ Mark Complete",
+            height=38,
+            corner_radius=8,
+            fg_color="#10B981",
+            hover_color="#059669",
+            font=("Poppins Medium", 13),
+            command=lambda: self.mark_complete(task['id'])
+        )
+        complete_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        
+        # Delete button
+        delete_btn = ctk.CTkButton(
+            buttons_frame,
+            text="🗑 Move to Bin",
+            height=38,
+            corner_radius=8,
+            fg_color="#EF4444",
+            hover_color="#DC2626",
+            font=("Poppins Medium", 13),
+            command=lambda: self.move_to_bin(task['id'])
+        )
+        delete_btn.pack(side="left", fill="x", expand=True)
+    
+    def mark_complete(self, task_id):
+        """Mark task as completed"""
+        # Find and update task in all_tasks
+        task_found = False
+        for task in self.all_tasks:
+            if task['id'] == task_id:
+                task['completed'] = True
+                task['completed_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"\033[92m [✓] Task marked as complete: {task['title']}")
+                task_found = True
+                break
+        
+        # If task not found in all_tasks, it means it's a new task only in self.tasks
+        if not task_found:
+            for task in self.tasks:
+                if task['id'] == task_id:
+                    task['completed'] = True
+                    task['completed_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    print(f"\033[92m [✓] Task marked as complete: {task['title']}")
+                    # Add it to all_tasks before removing from active tasks
+                    self.all_tasks.append(task)
+                    break
+        
+        # Remove from active tasks display
+        self.tasks = [t for t in self.tasks if t['id'] != task_id]
+        
+        # Save all tasks and refresh
+        self.save_tasks()
+        self.display_tasks()
+        
+        print(f"\033[93m [DEBUG] Total tasks in all_tasks: {len(self.all_tasks)}")
+        print(f"\033[93m [DEBUG] Active tasks: {len(self.tasks)}")
+    
+    def move_to_bin(self, task_id):
+        """Move task to bin"""
+        # Find and update task in all_tasks
+        task_found = False
+        for task in self.all_tasks:
+            if task['id'] == task_id:
+                task['deleted'] = True
+                task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"\033[93m [!] Task moved to bin: {task['title']}")
+                task_found = True
+                break
+        
+        # If task not found in all_tasks, it means it's a new task only in self.tasks
+        if not task_found:
+            for task in self.tasks:
+                if task['id'] == task_id:
+                    task['deleted'] = True
+                    task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    print(f"\033[93m [!] Task moved to bin: {task['title']}")
+                    # Add it to all_tasks before removing from active tasks
+                    self.all_tasks.append(task)
+                    break
+        
+        # Remove from active tasks display
+        self.tasks = [t for t in self.tasks if t['id'] != task_id]
+        
+        # Save all tasks and refresh
+        self.save_tasks()
+        self.display_tasks()
+        
+        print(f"\033[93m [DEBUG] Total tasks in all_tasks: {len(self.all_tasks)}")
+        print(f"\033[93m [DEBUG] Active tasks: {len(self.tasks)}")
     
     def create_floating_button(self):
         fab_container = ctk.CTkFrame(self, fg_color="transparent")
@@ -359,6 +605,12 @@ class TasksPage(ctk.CTkFrame):
         
         fab.pack()
 
+    def refresh_tasks(self):
+        """Refresh tasks from JSON - called when page is shown"""
+        self.load_tasks()
+        self.display_tasks()
+        print(f"\033[92m [✓] Tasks refreshed - {len(self.tasks)} tasks loaded")
+    
     def go_back(self):
         if self.navigate_callback:
             self.navigate_callback("DashboardPage")
@@ -372,6 +624,15 @@ class TasksPage(ctk.CTkFrame):
         
         # Check if task was created
         if modal.result:
+            # Add to active tasks
             self.tasks.append(modal.result)
+            # Also add to all_tasks
+            self.all_tasks.append(modal.result)
             print(f"\033[92m [+] Task added to list: {modal.result}")
-            # Here you can update the UI to show the new task
+            print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Active: {len(self.tasks)}")
+            
+            # Save to JSON
+            self.save_tasks()
+            
+            # Refresh display
+            self.display_tasks()

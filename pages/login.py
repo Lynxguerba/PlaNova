@@ -177,7 +177,10 @@ class LoginPage(ctk.CTkFrame):
             if user.get("username") == username:
                 # Compare hashed passwords
                 if user.get("password") == hashed_password:
-                    return True, user
+                    # Add plain text password to user data (for settings python file display)
+                    user_with_password = user.copy()
+                    user_with_password["plain_password"] = password  # Store plain text
+                    return True, user_with_password
                 else:
                     return False, None
         
@@ -246,6 +249,11 @@ class LoginPage(ctk.CTkFrame):
         dashboard_frame = self.controller.frames.get("DashboardPage")
         if dashboard_frame:
             dashboard_frame.update_user_info(user_data.get("username", "User"))
+        
+        # Update settings page with user info (including plain password)
+        settings_frame = self.controller.frames.get("SettingsPage")
+        if settings_frame:
+            settings_frame.update_user_info(user_data)
         
         self.clear_fields()
         self.login_btn.configure(state="normal", text="Login")
