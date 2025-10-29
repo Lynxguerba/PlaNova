@@ -13,7 +13,7 @@ A simple and efficient productivity app built with Python and CustomTkinter that
 
 ## Screenshots
 
-<!-- ![PlaNova Screenshot](path/to/screenshot.png) -->
+![PlaNova Screenshot](assets/images/thumbnail.png)
 
 ## Prerequisites
 
