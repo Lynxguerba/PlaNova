@@ -830,36 +830,36 @@ class UpcomingPage(ctk.CTkFrame):
         
         print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Upcoming: {len(self.upcoming_tasks)}")
 
-        def move_to_bin(self, task_id):
-            """Move task to bin"""
-            # Find and update task in all_tasks
-            task_found = False
-            for task in self.all_tasks:
+    def move_to_bin(self, task_id):
+        """Move task to bin"""
+        # Find and update task in all_tasks
+        task_found = False
+        for task in self.all_tasks:
+            if task['id'] == task_id:
+                task['deleted'] = True
+                task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"\033[93m [!] Task moved to bin: {task['title']}")
+                task_found = True
+                break
+        
+        # If task not found in all_tasks, find in upcoming_tasks
+        if not task_found:
+            for task in self.upcoming_tasks:
                 if task['id'] == task_id:
                     task['deleted'] = True
                     task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     print(f"\033[93m [!] Task moved to bin: {task['title']}")
-                    task_found = True
+                    self.all_tasks.append(task)
                     break
-            
-            # If task not found in all_tasks, find in upcoming_tasks
-            if not task_found:
-                for task in self.upcoming_tasks:
-                    if task['id'] == task_id:
-                        task['deleted'] = True
-                        task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        print(f"\033[93m [!] Task moved to bin: {task['title']}")
-                        self.all_tasks.append(task)
-                        break
-            
-            # Remove from upcoming tasks display
-            self.upcoming_tasks = [t for t in self.upcoming_tasks if t['id'] != task_id]
-            
-            # Save all tasks and refresh
-            self.save_tasks()
-            self.display_upcoming_tasks()
-            
-            print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Upcoming: {len(self.upcoming_tasks)}")
+        
+        # Remove from upcoming tasks display
+        self.upcoming_tasks = [t for t in self.upcoming_tasks if t['id'] != task_id]
+        
+        # Save all tasks and refresh
+        self.save_tasks()
+        self.display_upcoming_tasks()
+        
+        print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Upcoming: {len(self.upcoming_tasks)}")
 
     def create_floating_button(self):
         fab_container = ctk.CTkFrame(self, fg_color="transparent")
