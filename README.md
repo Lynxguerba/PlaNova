@@ -66,6 +66,10 @@ For developers who want to work on the project with automatic reloading:
 python dev_runner.py
 ```
 
+⚠️ **Note for Windows Users:**  
+> When running PlaNova on Windows, some UI elements may appear misaligned or clipped due to a known CustomTkinter rendering issue. This bug does not affect functionality and will be addressed in a future update.
+
+
 ## Dependencies
 
 - **customtkinter** - Modern UI framework for Python
