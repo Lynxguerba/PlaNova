@@ -96,6 +96,11 @@ PlaNova/
 │   ├── appbar.py                 # Top navigation bar component
 │   └── button.py                 # Custom button components
 │
+├── modals/
+│   ├── __init__.py
+│   ├── create_task_modal.py      # Create Task Modal
+│   └── create_upcoming_task_modal.py  # Create Upcoming Task Modal
+│
 ├── pages/
 │   ├── __init__.py
 │   ├── bin.py                    # Recycle bin page
