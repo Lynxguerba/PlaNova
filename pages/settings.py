@@ -125,6 +125,7 @@ class SettingsPage(ctk.CTkFrame):
             self.actual_password = user_data.get("plain_password", "")
             
             print(f"\033[92m [✓] Settings updated for user: {username}")
+            
 
     def toggle_password(self):
         """Toggle password visibility"""
@@ -147,4 +148,4 @@ class SettingsPage(ctk.CTkFrame):
             self.controller.current_user = None
         
         # Redirect to login page
-        self.controller.show_frame("LoginPage")
+        self.controller.show_frame("WelcomePage")
