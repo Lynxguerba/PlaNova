@@ -1,10 +1,11 @@
-from PIL import Image  
+from PIL import Image   # type: ignore
 import customtkinter as ctk  # type: ignore
 import json
 import os
 
 
 class BinPage(ctk.CTkFrame):
+    
     def __init__(self, parent, controller=None, navigate_callback=None):
         super().__init__(parent, fg_color="#F9FAFB")
         
@@ -36,10 +37,19 @@ class BinPage(ctk.CTkFrame):
         self.display_deleted_tasks()
         
         # Floating empty bin button
-        self.create_floating_button()
+        self.delete_floating_button()
+        
+        # --- Hidden spacer at bottom for padding ---
+        bottom_spacer = ctk.CTkFrame(
+            self.content_container, 
+            fg_color="transparent", 
+            height=50
+        )
+        bottom_spacer.pack(pady=(0, 30))
     
+    
+    # Override tkraise to refresh deleted tasks when page is shown
     def tkraise(self, aboveThis=None):
-        """Override tkraise to refresh deleted tasks when page is shown"""
         super().tkraise(aboveThis)
         self.refresh_deleted_tasks()
     
@@ -94,8 +104,8 @@ class BinPage(ctk.CTkFrame):
         )
         title.pack(side="left", padx=15)
     
+    # Load deleted tasks from JSON file for current user
     def load_deleted_tasks(self):
-        """Load deleted tasks from JSON file for current user"""
         try:
             file_path = "data/preferences.json"
             
@@ -132,39 +142,20 @@ class BinPage(ctk.CTkFrame):
         except Exception as e:
             print(f"\033[91m [!] Error loading deleted tasks: {str(e)}")
     
-    def save_tasks(self):
-        """Save tasks back to JSON file"""
+    # Update dashboard counts
+    def update_dashboard_counts(self):
+        """Update the dashboard counts after any change"""
         try:
-            file_path = "data/preferences.json"
-            
-            # Load existing data
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-            
-            # Get current user
-            if hasattr(self.controller, 'current_user'):
-                username = self.controller.current_user.get('username')
-                
-                # Update user's tasks
-                for user in data.get('users', []):
-                    if user.get('username') == username:
-                        # Simply save all tasks from the original source
-                        # We need to reload all tasks and update only the one we modified
-                        all_tasks = user.get('tasks', [])
-                        user['tasks'] = all_tasks
-                        break
-                
-                # Save back to file
-                with open(file_path, 'w') as file:
-                    json.dump(data, file, indent=4)
-                
-                print(f"\033[92m [✓] Tasks saved for user: {username}")
-            
+            if hasattr(self.controller, 'frames'):
+                dashboard = self.controller.frames.get('DashboardPage')
+                if dashboard:
+                    dashboard.update_task_counts()
+                    print(f"\033[92m [✓] Dashboard counts updated")
         except Exception as e:
-            print(f"\033[91m [!] Error saving tasks: {str(e)}")
+            print(f"\033[91m [!] Error updating dashboard: {str(e)}")
     
+    # Display all deleted tasks
     def display_deleted_tasks(self):
-        """Display all deleted tasks"""
         # Clear existing widgets
         for widget in self.tasks_list_frame.winfo_children():
             widget.destroy()
@@ -184,8 +175,8 @@ class BinPage(ctk.CTkFrame):
             for task in self.deleted_tasks:
                 self.create_deleted_task_card(task)
     
+    # Create a deleted task card widget with red styling
     def create_deleted_task_card(self, task):
-        """Create a deleted task card widget with red styling"""
         # Main card frame with red accent
         card = ctk.CTkFrame(
             self.tasks_list_frame,
@@ -290,8 +281,8 @@ class BinPage(ctk.CTkFrame):
         )
         delete_btn.pack(side="left", fill="x", expand=True)
     
+    # Restore task back to active tasks
     def restore_task(self, task_id):
-        """Restore task back to active tasks"""
         try:
             file_path = "data/preferences.json"
             
@@ -317,6 +308,9 @@ class BinPage(ctk.CTkFrame):
                                 break
                         
                         user['tasks'] = all_tasks
+                        
+                        # IMPORTANT: Update controller's current_user
+                        self.controller.current_user['tasks'] = all_tasks
                         break
                 
                 # Save back to file
@@ -324,6 +318,9 @@ class BinPage(ctk.CTkFrame):
                     json.dump(data, file, indent=4)
                 
                 print(f"\033[92m [✓] Task restoration saved to JSON")
+                
+                # Update dashboard counts
+                self.update_dashboard_counts()
         
         except Exception as e:
             print(f"\033[91m [!] Error restoring task: {str(e)}")
@@ -334,8 +331,8 @@ class BinPage(ctk.CTkFrame):
         # Refresh display
         self.display_deleted_tasks()
     
+    # Permanently delete a task
     def delete_permanently(self, task_id):
-        """Permanently delete a task"""
         task_title = ""
         for task in self.deleted_tasks:
             if task['id'] == task_id:
@@ -357,13 +354,20 @@ class BinPage(ctk.CTkFrame):
                 for user in data.get('users', []):
                     if user.get('username') == username:
                         # Remove task permanently
-                        user['tasks'] = [t for t in user.get('tasks', []) if t.get('id') != task_id]
+                        updated_tasks = [t for t in user.get('tasks', []) if t.get('id') != task_id]
+                        user['tasks'] = updated_tasks
+                        
+                        # IMPORTANT: Update controller's current_user
+                        self.controller.current_user['tasks'] = updated_tasks
                         break
                 
                 with open(file_path, 'w') as file:
                     json.dump(data, file, indent=4)
                 
                 print(f"\033[91m [✕] Task permanently deleted: {task_title}")
+                
+                # Update dashboard counts
+                self.update_dashboard_counts()
         
         except Exception as e:
             print(f"\033[91m [!] Error permanently deleting task: {str(e)}")
@@ -371,8 +375,8 @@ class BinPage(ctk.CTkFrame):
         # Refresh display
         self.display_deleted_tasks()
     
+    # Empty the entire bin (delete all tasks permanently)
     def empty_bin(self):
-        """Empty the entire bin (delete all tasks permanently)"""
         if not self.deleted_tasks:
             print("\033[93m [!] Bin is already empty")
             return
@@ -390,16 +394,23 @@ class BinPage(ctk.CTkFrame):
                 for user in data.get('users', []):
                     if user.get('username') == username:
                         # Remove all deleted tasks
-                        user['tasks'] = [
+                        updated_tasks = [
                             t for t in user.get('tasks', []) 
                             if not t.get('deleted', False)
                         ]
+                        user['tasks'] = updated_tasks
+                        
+                        # IMPORTANT: Update controller's current_user
+                        self.controller.current_user['tasks'] = updated_tasks
                         break
                 
                 with open(file_path, 'w') as file:
                     json.dump(data, file, indent=4)
                 
                 print(f"\033[91m [✕] Bin emptied - {len(self.deleted_tasks)} tasks permanently deleted")
+                
+                # Update dashboard counts
+                self.update_dashboard_counts()
         
         except Exception as e:
             print(f"\033[91m [!] Error emptying bin: {str(e)}")
@@ -408,7 +419,7 @@ class BinPage(ctk.CTkFrame):
         self.deleted_tasks = []
         self.display_deleted_tasks()
     
-    def create_floating_button(self):
+    def delete_floating_button(self):
         fab_container = ctk.CTkFrame(self, fg_color="transparent")
         fab_container.place(relx=1.0, rely=1.0, x=-30, y=-30, anchor="se")
         
@@ -446,8 +457,8 @@ class BinPage(ctk.CTkFrame):
         
         fab.pack()
     
+    # Refresh deleted tasks from JSON 
     def refresh_deleted_tasks(self):
-        """Refresh deleted tasks from JSON - called when page is shown"""
         self.load_deleted_tasks()
         self.display_deleted_tasks()
         print(f"\033[92m [✓] Deleted tasks refreshed - {len(self.deleted_tasks)} tasks loaded")
