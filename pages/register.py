@@ -236,7 +236,9 @@ class RegisterPage(ctk.CTkFrame):
         new_user = {
             "email": email,
             "username": username,
-            "password": self.hash_password(password)
+            "password": self.hash_password(password),
+            "tasks": [],
+            "usage_data": {}
         }
         data["users"].append(new_user)
         
