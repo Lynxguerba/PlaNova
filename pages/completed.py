@@ -1,5 +1,5 @@
 import customtkinter as ctk  # type: ignore
-from PIL import Image
+from PIL import Image # type: ignore
 import json
 import os
 
@@ -35,6 +35,14 @@ class CompletedPage(ctk.CTkFrame):
         # Load and display completed tasks
         self.load_completed_tasks()
         self.display_completed_tasks()
+        
+        # --- Hidden spacer at bottom for padding ---
+        bottom_spacer = ctk.CTkFrame(
+            self.content_container, 
+            fg_color="transparent", 
+            height=50
+        )
+        bottom_spacer.pack(pady=(0, 30))
     
     def tkraise(self, aboveThis=None):
         """Override tkraise to refresh completed tasks when page is shown"""
