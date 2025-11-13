@@ -1,4 +1,4 @@
-from PIL import Image  
+from PIL import Image   # type: ignore
 import customtkinter as ctk  # type: ignore
 from datetime import datetime
 import json
@@ -42,6 +42,14 @@ class TasksPage(ctk.CTkFrame):
         
         # Floating create button
         self.create_floating_button()
+        
+        # --- Hidden spacer at bottom for padding ---
+        bottom_spacer = ctk.CTkFrame(
+            self.content_container, 
+            fg_color="transparent", 
+            height=50
+        )
+        bottom_spacer.pack(pady=(0, 30))
     
     def tkraise(self, aboveThis=None):
         """Override tkraise to refresh tasks when page is shown"""
@@ -120,10 +128,13 @@ class TasksPage(ctk.CTkFrame):
                     if user.get('username') == username:
                         # Load ALL tasks
                         self.all_tasks = user.get('tasks', [])
-                        # Filter only active tasks for display (not deleted, not completed)
+                        # Filter only active REGULAR tasks for display 
+                        # (not deleted, not completed, not upcoming)
                         self.tasks = [
                             t for t in self.all_tasks 
-                            if not t.get('deleted', False) and not t.get('completed', False)
+                            if not t.get('deleted', False) 
+                            and not t.get('completed', False)
+                            and not t.get('is_upcoming', False)  # EXCLUDE upcoming tasks
                         ]
                         print(f"\033[92m [✓] Loaded {len(self.tasks)} active tasks for user: {username}")
                         return
@@ -150,6 +161,10 @@ class TasksPage(ctk.CTkFrame):
                 for user in data.get('users', []):
                     if user.get('username') == username:
                         user['tasks'] = self.all_tasks
+                        
+                        # IMPORTANT: Update the controller's current_user object
+                        # so dashboard can see the changes
+                        self.controller.current_user['tasks'] = self.all_tasks
                         break
                 
                 # Save back to file
@@ -157,6 +172,13 @@ class TasksPage(ctk.CTkFrame):
                     json.dump(data, file, indent=4)
                 
                 print(f"\033[92m [✓] Tasks saved for user: {username}")
+                
+                # Update dashboard counts if the dashboard exists
+                if hasattr(self.controller, 'frames'):
+                    dashboard = self.controller.frames.get('DashboardPage')
+                    if dashboard:
+                        dashboard.update_task_counts()
+                        print(f"\033[92m [✓] Dashboard counts updated")
             
         except Exception as e:
             print(f"\033[91m [!] Error saving tasks: {str(e)}")
@@ -236,48 +258,122 @@ class TasksPage(ctk.CTkFrame):
             )
             time_label.pack(fill="x", pady=(5, 0))
         
+        # Invited users display (for task owner) - UPDATED FOR MULTIPLE USERS
+        invited_users = task.get('invited_users', [])
+        # Backward compatibility: check for old single invited_user field
+        if not invited_users and task.get('invited_user'):
+            invited_users = [task.get('invited_user')]
+        
+        if invited_users and not task.get('is_shared'):
+            invited_text = ", ".join([f"@{u}" for u in invited_users])
+            invited_label = ctk.CTkLabel(
+                info_frame,
+                text=f"👥 Invited: {invited_text}",
+                font=("Poppins", 11),
+                text_color="#8B5CF6",
+                anchor="w"
+            )
+            invited_label.pack(fill="x", pady=(5, 0))
+        
+        # Shared task indicator (for invited user)
+        if task.get('is_shared') and task.get('invited_by'):
+            shared_label = ctk.CTkLabel(
+                info_frame,
+                text=f"📩 Shared by: @{task['invited_by']}",
+                font=("Poppins", 11),
+                text_color="#10B981",
+                anchor="w"
+            )
+            shared_label.pack(fill="x", pady=(5, 0))
+        
         # Buttons container at the bottom
         buttons_frame = ctk.CTkFrame(card_content, fg_color="transparent")
         buttons_frame.pack(fill="x", pady=(12, 0))
         
-        # Edit button
-        edit_btn = ctk.CTkButton(
-            buttons_frame,
-            text="✏️ Edit",
-            height=38,
-            corner_radius=8,
-            fg_color="#F59E0B",
-            hover_color="#D97706",
-            font=("Poppins Medium", 13),
-            command=lambda: self.edit_task(task['id'])
-        )
-        edit_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        # For shared tasks, only show delete and complete buttons (no edit)
+        if task.get('is_shared'):
+            # Complete button
+            complete_btn = ctk.CTkButton(
+                buttons_frame,
+                text="✓ Mark Complete",
+                height=38,
+                corner_radius=8,
+                fg_color="#10B981",
+                hover_color="#059669",
+                font=("Poppins Medium", 13),
+                command=lambda: self.mark_complete(task['id'])
+            )
+            complete_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+            
+            # Delete button (for shared tasks, only affects invited user)
+            delete_btn = ctk.CTkButton(
+                buttons_frame,
+                text="🗑️ Remove",
+                height=38,
+                corner_radius=8,
+                fg_color="#EF4444",
+                hover_color="#DC2626",
+                font=("Poppins Medium", 13),
+                command=lambda: self.remove_shared_task(task['id'])
+            )
+            delete_btn.pack(side="left", fill="x", expand=True)
+        else:
+            # Normal task buttons (Edit, Complete, Delete)
+            # Edit button
+            edit_btn = ctk.CTkButton(
+                buttons_frame,
+                text="✏️ Edit",
+                height=38,
+                corner_radius=8,
+                fg_color="#F59E0B",
+                hover_color="#D97706",
+                font=("Poppins Medium", 13),
+                command=lambda: self.edit_task(task['id'])
+            )
+            edit_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+            
+            # Complete button
+            complete_btn = ctk.CTkButton(
+                buttons_frame,
+                text="✓ Mark Complete",
+                height=38,
+                corner_radius=8,
+                fg_color="#10B981",
+                hover_color="#059669",
+                font=("Poppins Medium", 13),
+                command=lambda: self.mark_complete(task['id'])
+            )
+            complete_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+            
+            # Delete button
+            delete_btn = ctk.CTkButton(
+                buttons_frame,
+                text="🗑️",
+                height=38,
+                corner_radius=8,
+                fg_color="#EF4444",
+                hover_color="#DC2626",
+                font=("Poppins Medium", 13),
+                command=lambda: self.move_to_bin(task['id'])
+            )
+            delete_btn.pack(side="left", fill="x", expand=True)
+    
+    def remove_shared_task(self, task_id):
+        """Remove shared task (only for invited user, doesn't affect original)"""
+        # Find and mark task as deleted
+        for task in self.all_tasks:
+            if task['id'] == task_id and task.get('is_shared'):
+                task['deleted'] = True
+                task['deleted_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                print(f"\033[93m [!] Shared task removed: {task['title']}")
+                break
         
-        # Complete button
-        complete_btn = ctk.CTkButton(
-            buttons_frame,
-            text="✓ Mark Complete",
-            height=38,
-            corner_radius=8,
-            fg_color="#10B981",
-            hover_color="#059669",
-            font=("Poppins Medium", 13),
-            command=lambda: self.mark_complete(task['id'])
-        )
-        complete_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        # Remove from active tasks display
+        self.tasks = [t for t in self.tasks if t['id'] != task_id]
         
-        # Delete button
-        delete_btn = ctk.CTkButton(
-            buttons_frame,
-            text="🗑️",
-            height=38,
-            corner_radius=8,
-            fg_color="#EF4444",
-            hover_color="#DC2626",
-            font=("Poppins Medium", 13),
-            command=lambda: self.move_to_bin(task['id'])
-        )
-        delete_btn.pack(side="left", fill="x", expand=True)
+        # Save and refresh
+        self.save_tasks()
+        self.display_tasks()
     
     def edit_task(self, task_id):
         """Open edit modal for a task"""
@@ -443,6 +539,9 @@ class TasksPage(ctk.CTkFrame):
         
         # Check if task was created
         if modal.result:
+            # IMPORTANT: Ensure is_upcoming is False for regular tasks
+            modal.result['is_upcoming'] = False
+            
             # Add to active tasks
             self.tasks.append(modal.result)
             # Also add to all_tasks
