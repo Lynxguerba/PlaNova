@@ -6,6 +6,7 @@ import hashlib
 
 class LoginPage(ctk.CTkFrame):
     
+    # UI
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="#D4E3FF")
         self.controller = controller
