@@ -2,7 +2,8 @@ import customtkinter as ctk  # type: ignore
 from PIL import Image # type: ignore
 import json
 import os
-
+import base64
+from io import BytesIO
 
 class CompletedPage(ctk.CTkFrame):
     
@@ -212,6 +213,48 @@ class CompletedPage(ctk.CTkFrame):
                 justify="left"
             )
             desc_label.pack(fill="x", pady=(3, 0))
+            
+        # Image display - AFTER description  ← THIS IS THE IMAGE SECTION
+        if task.get('image_base64'):
+            try:
+                # Decode base64 image
+                img_data = base64.b64decode(task['image_base64'])
+                img = Image.open(BytesIO(img_data))
+                
+                # Resize for display (max width 400px)
+                max_width = 400
+                if img.width > max_width:
+                    ratio = max_width / img.width
+                    new_height = int(img.height * ratio)
+                    img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+                
+                # Create CTkImage for display
+                ctk_image = ctk.CTkImage(
+                    light_image=img,
+                    dark_image=img,
+                    size=(img.width, img.height)
+                )
+                
+                # Image container
+                image_container = ctk.CTkFrame(
+                    info_frame,
+                    fg_color="#F9FAFB",
+                    corner_radius=8,
+                    border_width=1,
+                    border_color="#E5E7EB"
+                )
+                image_container.pack(fill="x", pady=(8, 0))
+                
+                # Image label
+                image_label = ctk.CTkLabel(
+                    image_container,
+                    image=ctk_image,
+                    text=""
+                )
+                image_label.pack(padx=10, pady=10)
+            except Exception as e:
+                print(f"\033[92m [-] Could not load plus icon: {e}")
+        
         
         # Time (if exists)
         if task.get('time'):
