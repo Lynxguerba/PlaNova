@@ -35,6 +35,7 @@ class DashboardPage(ctk.CTkFrame):
         )
         self.content_container.pack(fill="both", expand=True, padx=20, pady=(10, 0))
 
+
         # --- Image Display Section ---
         self.image_label = ctk.CTkLabel(self.content_container, text="")
         self.image_label.pack(pady=(40, 20))
@@ -208,7 +209,7 @@ class DashboardPage(ctk.CTkFrame):
         
         week_label = ctk.CTkLabel(
             week_frame,
-            text="Week Average",
+            text="Week",
             font=ctk.CTkFont(family="Poppins", size=13, weight="bold"),
             text_color="#1E3A8A"
         )
@@ -408,26 +409,38 @@ class DashboardPage(ctk.CTkFrame):
             
             self.today_time_label.configure(text=today_text)
             
-            # Calculate week average
+            # Calculate week total (changed from average)
             week_dates = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
             week_total = sum(self.usage_data.get(date, 0) for date in week_dates)
-            week_avg = week_total / 7
             
-            # Format week average
-            if week_avg < 60:
-                week_text = f"{int(week_avg)}m"
+            # Format week total
+            if week_total < 60:
+                week_text = f"{int(week_total)}m"
             else:
-                hours = int(week_avg / 60)
-                minutes = int(week_avg % 60)
+                hours = int(week_total / 60)
+                minutes = int(week_total % 60)
                 week_text = f"{hours}h {minutes}m"
             
             self.week_avg_label.configure(text=week_text)
             
-            # Update weekly bars
-            max_usage = max([self.usage_data.get(date, 0) for date in week_dates] + [1])
+            # Update weekly bars - FIXED: Proper day alignment
+            # Get current day of week (0=Monday, 6=Sunday)
+            current_weekday = datetime.now().weekday()
             
+            # Calculate days for the current week (Sunday to Saturday)
+            # We need to find the most recent Sunday
+            days_since_sunday = (current_weekday + 1) % 7  # +1 because Monday=0, but we want Sunday=0
+            week_start = datetime.now() - timedelta(days=days_since_sunday)
+            
+            # Generate dates for Sun, Mon, Tue, Wed, Thu, Fri, Sat
+            week_dates_ordered = [(week_start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+            
+            # Find max usage for scaling
+            max_usage = max([self.usage_data.get(date, 0) for date in week_dates_ordered] + [1])
+            
+            # Update each bar (0=Sunday, 1=Monday, ..., 6=Saturday)
             for i in range(7):
-                date = week_dates[6 - i]  # Reverse to show Sunday to Saturday
+                date = week_dates_ordered[i]
                 usage = self.usage_data.get(date, 0)
                 
                 # Calculate bar height (max 90 pixels)
