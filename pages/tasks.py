@@ -586,9 +586,10 @@ class TasksPage(ctk.CTkFrame):
             modal.result['is_upcoming'] = False
             
             # Add to active tasks
-            self.tasks.append(modal.result)
+            self.tasks.insert(0, modal.result)
             # Also add to all_tasks
-            self.all_tasks.append(modal.result)
+            self.all_tasks.insert(0, modal.result)
+            
             print(f"\033[92m [+] Task added to list: {modal.result}")
             print(f"\033[93m [DEBUG] Total tasks: {len(self.all_tasks)}, Active: {len(self.tasks)}")
             
