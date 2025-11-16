@@ -8,7 +8,7 @@ from io import BytesIO
 from tkinter import filedialog
 from PIL import Image # type: ignore
 import base64
-
+import cv2 # type: ignore
 
 class CreateUpcomingTaskModal(ctk.CTkToplevel):
     def __init__(self, parent, task_data=None):
@@ -27,6 +27,9 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         self.selected_image_path = None
         self.selected_image_base64 = None
         self.image_preview_label = None
+        
+        self.camera_window = None
+        self.camera_capture = None
         
         # Configure modal
         self.title("Edit Upcoming Task" if self.is_edit_mode else "Create Upcoming Task")
@@ -173,17 +176,33 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         )
         image_container.pack(fill="x", pady=(0, 15))
         
+        # Buttons frame for image options
+        image_buttons_frame = ctk.CTkFrame(image_container, fg_color="transparent")
+        image_buttons_frame.pack(pady=10, padx=10, fill="x")
+        
         # Upload button
         upload_btn = ctk.CTkButton(
-            image_container,
-            text="📷 Choose Image",
+            image_buttons_frame,
+            text="📄 Choose Image",
             height=40,
             font=("Poppins Medium", 13),
             fg_color="#3B82F6",
             hover_color="#2563EB",
             command=self.select_image
         )
-        upload_btn.pack(pady=10, padx=10)
+        upload_btn.pack(side="left", fill="x", expand=True, padx=(5, 0))
+        
+        # Camera capture button
+        camera_btn = ctk.CTkButton(
+            image_buttons_frame,
+            text="📷 Take Photo",
+            height=40,
+            font=("Poppins Medium", 13),
+            fg_color="#10B981",
+            hover_color="#059669",
+            command=self.open_camera
+        )
+        camera_btn.pack(side="left", fill="x", expand=True, padx=(5, 0))
         
         # Image preview label
         self.image_preview_label = ctk.CTkLabel(
@@ -204,7 +223,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
             hover_color="#DC2626",
             command=self.remove_image
         )
-        # Don't pack yet - will show when image is selected
+      
         
         # Date picker section
         date_label = ctk.CTkLabel(
@@ -870,3 +889,164 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         
         # Remove error after 3 seconds
         self.after(3000, error_label.destroy)
+        
+    def open_camera(self):
+        """Open camera in a new window for photo capture"""
+        try:
+            # Create camera window
+            self.camera_window = ctk.CTkToplevel(self)
+            self.camera_window.title("Camera Capture")
+            self.camera_window.geometry("800x650")
+            self.camera_window.transient(self)
+            
+            # Center camera window
+            self.camera_window.update_idletasks()
+            x = self.winfo_x() + (self.winfo_width() // 2) - (800 // 2)
+            y = self.winfo_y() + (self.winfo_height() // 2) - (650 // 2)
+            self.camera_window.geometry(f"800x650+{x}+{y}")
+            
+            # Initialize camera
+            self.camera_capture = cv2.VideoCapture(0)
+            
+            if not self.camera_capture.isOpened():
+                self.show_error("Could not access camera")
+                self.camera_window.destroy()
+                return
+            
+            # Camera preview label
+            self.camera_label = ctk.CTkLabel(
+                self.camera_window,
+                text="",
+                fg_color="#000000"
+            )
+            self.camera_label.pack(pady=20, padx=20)
+            
+            # Buttons frame
+            camera_buttons = ctk.CTkFrame(self.camera_window, fg_color="transparent")
+            camera_buttons.pack(pady=10)
+            
+            # Capture button
+            capture_btn = ctk.CTkButton(
+                camera_buttons,
+                text="📸 Capture",
+                height=45,
+                width=150,
+                font=("Poppins SemiBold", 14),
+                fg_color="#10B981",
+                hover_color="#059669",
+                command=self.capture_photo
+            )
+            capture_btn.pack(side="left", padx=10)
+            
+            # Cancel button
+            cancel_btn = ctk.CTkButton(
+                camera_buttons,
+                text="❌ Cancel",
+                height=45,
+                width=150,
+                font=("Poppins SemiBold", 14),
+                fg_color="#EF4444",
+                hover_color="#DC2626",
+                command=self.close_camera
+            )
+            cancel_btn.pack(side="left", padx=10)
+            
+            # Start video feed
+            self.update_camera_feed()
+            
+            # Handle window close
+            self.camera_window.protocol("WM_DELETE_WINDOW", self.close_camera)
+            
+        except Exception as e:
+            print(f"\033[91m [!] Error opening camera: {e}")
+            self.show_error("Failed to open camera")
+
+    def update_camera_feed(self):
+        """Update camera feed in real-time"""
+        if self.camera_capture and self.camera_capture.isOpened():
+            ret, frame = self.camera_capture.read()
+            
+            if ret:
+                # Convert BGR to RGB
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                
+                # Resize frame for display
+                display_width = 760
+                height, width = frame_rgb.shape[:2]
+                ratio = display_width / width
+                display_height = int(height * ratio)
+                frame_resized = cv2.resize(frame_rgb, (display_width, display_height))
+                
+                # Convert to PIL Image
+                img_pil = Image.fromarray(frame_resized)
+                
+                # Convert to CTkImage
+                ctk_image = ctk.CTkImage(
+                    light_image=img_pil,
+                    dark_image=img_pil,
+                    size=(display_width, display_height)
+                )
+                
+                # Update label
+                self.camera_label.configure(image=ctk_image)
+                self.camera_label.image = ctk_image  # Keep reference
+            
+            # Schedule next update
+            if self.camera_window and self.camera_window.winfo_exists():
+                self.camera_window.after(10, self.update_camera_feed)
+
+    def capture_photo(self):
+        """Capture current frame from camera"""
+        if self.camera_capture and self.camera_capture.isOpened():
+            ret, frame = self.camera_capture.read()
+            
+            if ret:
+                try:
+                    # Convert BGR to RGB
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    
+                    # Convert to PIL Image
+                    img = Image.fromarray(frame_rgb)
+                    
+                    # Resize if too large (max 800x800)
+                    max_size = (800, 800)
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    
+                    # Convert to base64
+                    buffered = BytesIO()
+                    img.save(buffered, format="PNG")
+                    img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                    
+                    # Store image data
+                    self.selected_image_path = "camera_capture.png"
+                    self.selected_image_base64 = img_base64
+                    
+                    # Update preview
+                    self.image_preview_label.configure(
+                        text=f"✅ Camera photo captured ({img.width}x{img.height})",
+                        text_color="#10B981"
+                    )
+                    
+                    # Show remove button
+                    self.remove_image_btn.pack(pady=(0, 10), padx=10)
+                    
+                    print(f"\033[92m [+] Photo captured from camera")
+                    
+                    # Close camera
+                    self.close_camera()
+                    
+                except Exception as e:
+                    print(f"\033[91m [!] Error capturing photo: {e}")
+                    self.show_error("Failed to capture photo")
+
+    def close_camera(self):
+        """Close camera and cleanup"""
+        if self.camera_capture:
+            self.camera_capture.release()
+            self.camera_capture = None
+        
+        if self.camera_window:
+            self.camera_window.destroy()
+            self.camera_window = None
+        
+        print("\033[93m [*] Camera closed")
