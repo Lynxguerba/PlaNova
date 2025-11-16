@@ -4,6 +4,10 @@ import calendar
 import uuid
 import json
 import os
+from io import BytesIO
+from tkinter import filedialog
+from PIL import Image # type: ignore
+import base64
 
 
 class CreateUpcomingTaskModal(ctk.CTkToplevel):
@@ -18,6 +22,11 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         # Track selected users
         self.selected_users = []
         self.user_checkboxes = {}
+        
+        # Track image
+        self.selected_image_path = None
+        self.selected_image_base64 = None
+        self.image_preview_label = None
         
         # Configure modal
         self.title("Edit Upcoming Task" if self.is_edit_mode else "Create Upcoming Task")
@@ -89,7 +98,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         main_container = ctk.CTkScrollableFrame(
             self, 
             fg_color="transparent",
-            scrollbar_button_color="#E5E7EB",
+            scrollbar_button_color="#FFFFFF",
             scrollbar_button_hover_color="#D1D5DB"
         )
         main_container.pack(fill="both", expand=True, padx=30, pady=20)
@@ -143,6 +152,59 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
             border_width=1
         )
         self.description_textbox.pack(fill="x", pady=(0, 15))
+        
+        # Image upload section
+        image_label = ctk.CTkLabel(
+            main_container,
+            text="Image (Optional)",
+            font=("Poppins Medium", 14),
+            text_color="#374151",
+            anchor="w"
+        )
+        image_label.pack(fill="x", pady=(0, 5))
+        
+        # Image upload container
+        image_container = ctk.CTkFrame(
+            main_container,
+            fg_color="#F9FAFB",
+            border_color="#E5E7EB",
+            border_width=1,
+            corner_radius=8
+        )
+        image_container.pack(fill="x", pady=(0, 15))
+        
+        # Upload button
+        upload_btn = ctk.CTkButton(
+            image_container,
+            text="📷 Choose Image",
+            height=40,
+            font=("Poppins Medium", 13),
+            fg_color="#3B82F6",
+            hover_color="#2563EB",
+            command=self.select_image
+        )
+        upload_btn.pack(pady=10, padx=10)
+        
+        # Image preview label
+        self.image_preview_label = ctk.CTkLabel(
+            image_container,
+            text="No image selected",
+            font=("Poppins", 11),
+            text_color="#6B7280"
+        )
+        self.image_preview_label.pack(pady=(0, 10))
+        
+        # Remove image button (hidden by default)
+        self.remove_image_btn = ctk.CTkButton(
+            image_container,
+            text="❌ Remove Image",
+            height=35,
+            font=("Poppins", 11),
+            fg_color="#EF4444",
+            hover_color="#DC2626",
+            command=self.remove_image
+        )
+        # Don't pack yet - will show when image is selected
         
         # Date picker section
         date_label = ctk.CTkLabel(
@@ -428,6 +490,61 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         )
         action_btn.pack(side="left", fill="x", expand=True)
     
+    def select_image(self):
+        """Open file dialog to select an image"""
+        try:
+            file_path = filedialog.askopenfilename(
+                title="Select an Image",
+                filetypes=[
+                    ("Image files", "*.png *.jpg *.jpeg *.gif *.bmp"),
+                    ("All files", "*.*")
+                ]
+            )
+            
+            if file_path:
+                # Load and validate image
+                img = Image.open(file_path)
+                
+                # Resize if too large (max 800x800)
+                max_size = (800, 800)
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                
+                # Convert to base64
+                buffered = BytesIO()
+                img.save(buffered, format=img.format or "PNG")
+                img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                
+                # Store image data
+                self.selected_image_path = file_path
+                self.selected_image_base64 = img_base64
+                
+                # Update preview
+                filename = os.path.basename(file_path)
+                self.image_preview_label.configure(
+                    text=f"✓ {filename} ({img.width}x{img.height})",
+                    text_color="#10B981"
+                )
+                
+                # Show remove button
+                self.remove_image_btn.pack(pady=(0, 10), padx=10)
+                
+                print(f"\033[92m [+] Image selected: {filename}")
+                
+        except Exception as e:
+            print(f"\033[91m [!] Error selecting image: {e}")
+            self.show_error("Failed to load image")
+    
+    def remove_image(self):
+        """Remove selected image"""
+        self.selected_image_path = None
+        self.selected_image_base64 = None
+        self.image_preview_label.configure(
+            text="No image selected",
+            text_color="#6B7280"
+        )
+        self.remove_image_btn.pack_forget()
+        print("\033[93m [*] Image removed")
+    
     def toggle_user_selection(self, username, var):
         """Handle user checkbox toggle"""
         if var.get():
@@ -455,6 +572,15 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
             # Set description
             if self.task_data.get('description'):
                 self.description_textbox.insert("1.0", self.task_data.get('description'))
+            
+            # Set image if available
+            if self.task_data.get('image_base64'):
+                self.selected_image_base64 = self.task_data.get('image_base64')
+                self.image_preview_label.configure(
+                    text="✓ Image attached",
+                    text_color="#10B981"
+                )
+                self.remove_image_btn.pack(pady=(0, 10), padx=10)
             
             # Set date if available
             if self.task_data.get('due_date'):
@@ -536,6 +662,9 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
         self.hour_spinbox.set(f"{now.hour:02d}")
         self.minute_spinbox.set(f"{(now.minute // 5) * 5:02d}")
         
+        # Clear image
+        self.remove_image()
+        
         # Clear all checkboxes
         for var in self.user_checkboxes.values():
             var.set(False)
@@ -551,7 +680,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
             return self.parent.controller.current_user.get('username')
         return None
     
-    def create_shared_task(self, invited_username, original_task_id, title, description, due_date, due_time, invited_by):
+    def create_shared_task(self, invited_username, original_task_id, title, description, due_date, due_time, invited_by, image_base64=None):
         """Create a shared copy of the task for the invited user"""
         try:
             file_path = "data/preferences.json"
@@ -574,6 +703,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
                         "description": description,
                         "due_date": due_date,
                         "due_time": due_time,
+                        "image_base64": image_base64,
                         "invited_by": invited_by,
                         "is_shared": True,
                         "completed": False,
@@ -645,6 +775,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
                     "description": description,
                     "due_date": due_datetime.strftime("%Y-%m-%d"),
                     "due_time": due_datetime.strftime("%H:%M"),
+                    "image_base64": self.selected_image_base64,
                     "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
                 
@@ -671,7 +802,8 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
                                 description,
                                 due_datetime.strftime("%Y-%m-%d"),
                                 due_datetime.strftime("%H:%M"),
-                                current_username
+                                current_username,
+                                self.selected_image_base64
                             )
                             if success:
                                 print(f"\033[92m [✓] New invitation sent to {username}")
@@ -690,6 +822,7 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
                     "description": description,
                     "due_date": due_datetime.strftime("%Y-%m-%d"),
                     "due_time": due_datetime.strftime("%H:%M"),
+                    "image_base64": self.selected_image_base64,
                     "invited_users": self.selected_users.copy(),
                     "invited_by": current_username,
                     "is_shared": False,
@@ -710,13 +843,15 @@ class CreateUpcomingTaskModal(ctk.CTkToplevel):
                             description,
                             due_datetime.strftime("%Y-%m-%d"),
                             due_datetime.strftime("%H:%M"),
-                            current_username
+                            current_username,
+                            self.selected_image_base64
                         )
                         if success:
                             print(f"\033[92m [✓] Shared upcoming task successfully created for {username}")
                         else:
                             print(f"\033[91m [✗] Failed to create shared task for {username}")
-            
+                        
+
             self.destroy()
             
         except ValueError as e:
