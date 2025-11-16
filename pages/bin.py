@@ -4,6 +4,7 @@ import json
 import os
 import base64
 from io import BytesIO
+import cv2
 
 
 class BinPage(ctk.CTkFrame):
