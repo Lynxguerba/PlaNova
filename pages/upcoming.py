@@ -205,7 +205,7 @@ class UpcomingPage(ctk.CTkFrame):
             placeholder.pack(expand=True, pady=50)
         else:
             # Display each upcoming task
-            for task in self.upcoming_tasks:
+            for task in reversed(self.upcoming_tasks):
                 self.create_upcoming_task_card(task)
     
     def create_upcoming_task_card(self, task):
@@ -609,10 +609,10 @@ class UpcomingPage(ctk.CTkFrame):
         # Check if task was created
         if modal.result:
             # Add to all_tasks list
-            self.all_tasks.append(modal.result)
+            self.all_tasks.insert(0, modal.result)
             
             # Add to upcoming_tasks list
-            self.upcoming_tasks.append(modal.result)
+            self.upcoming_tasks.insert(0, modal.result)
             
             # Sort upcoming tasks by due date
             self.upcoming_tasks.sort(key=lambda x: f"{x.get('due_date', '')} {x.get('due_time', '')}")
