@@ -48,7 +48,7 @@ A simple and efficient productivity app built with Python and CustomTkinter that
 
 4. **Install dependencies**
    ```bash
-   pip install customtkinter pillow watchdog
+   pip install customtkinter pillow watchdog opencv-python
    ```
 
 ## Usage
