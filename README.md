@@ -9,7 +9,7 @@ A simple and efficient productivity app built with Python and CustomTkinter that
 - ✔️ **Mark Complete** - Track completed tasks
 - 🗑️ **Trash Bin** - Deleted tasks are stored in a separate window
 - ♻️ **Restore Tasks** - Recover tasks from the trash bin
-- 🗂️ **Organized View** - Separate windows for active and deleted tasks
+- 🗂️ **Organized View** - Separate windows for active and deleted tasks 
 
 ## Screenshots
 
