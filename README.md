@@ -10,7 +10,7 @@ A simple and efficient productivity app built with Python and CustomTkinter that
 - 🗑️ **Trash Bin** - Deleted tasks are stored in a separate window
 - ♻️ **Restore Tasks** - Recover tasks from the trash bin
 - 🗂️ **Organized View** - Separate windows for active and deleted tasks 
-
+ 
 ## Screenshots
 
 ![PlaNova Screenshot](assets/images/cover.png)
