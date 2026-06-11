@@ -3,7 +3,7 @@
 A simple and efficient productivity app built with Python and CustomTkinter that helps you manage your tasks effectively.
 
 ## Features
-
+ 
 - ✅ **Create Tasks** - Add new tasks to your to-do list
 - 📅 **Upcoming Tasks** - Schedule and view upcoming tasks
 - ✔️ **Mark Complete** - Track completed tasks
