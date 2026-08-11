@@ -22,7 +22,7 @@ A simple and efficient productivity app built with Python and CustomTkinter that
 - pip (Python package manager)
 
 ## Installation
-
+ 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/yourusername/PlaNova.git
