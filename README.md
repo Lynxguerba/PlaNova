@@ -27,7 +27,7 @@ A simple and efficient productivity app built with Python and CustomTkinter that
    ```bash
    git clone https://github.com/yourusername/PlaNova.git
    cd PlaNova
-   ```
+   ``` 
 
 2. **Create a virtual environment**
    ```bash
